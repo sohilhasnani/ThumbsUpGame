@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Thumbs Up! - Multiplayer Party Game</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            brand: ['Fredoka', 'sans-serif'],
+            sans: ['Outfit', 'sans-serif'],
+          },
+          keyframes: {
+            bounceSlight: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-5px)' }
+            },
+            popScore: {
+              '0%': { opacity: '0', transform: 'translateY(0) scale(0.6)' },
+              '40%': { opacity: '1', transform: 'translateY(-24px) scale(1.25)' },
+              '100%': { opacity: '0', transform: 'translateY(-48px) scale(1)' }
+            }
+          },
+          animation: {
+            'bounce-slight': 'bounceSlight 2.5s ease-in-out infinite',
+            'pop-score': 'popScore 0.85s ease-out forwards'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Robust 3D Card Flip without click-blocking bugs */
+    .card-scene {
+      perspective: 900px;
+      touch-action: manipulation;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .card-flip {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform-style: preserve-3d;
+      pointer-events: none; /* Let the parent card-scene capture clicks/taps cleanly */
+    }
+
+    .card-scene.revealed .card-flip {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.75rem;
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+    }
+
+    /* Scrollbars */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Interactive button styles */
+    button {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col items-center selection:bg-amber-400 selection:text-slate-950 overflow-x-hidden">
+
+  <!-- Ambient Glow Background -->
+  <div class="fixed inset-0 pointer-events-none -z-10 overflow-hidden opacity-30">
+    <div class="absolute -top-32 -left-20 w-80 h-80 bg-purple-600/30 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/2 -right-20 w-80 h-80 bg-emerald-600/25 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-20 left-1/3 w-80 h-80 bg-amber-500/25 rounded-full blur-3xl"></div>
+  </div>
+
+  <!-- Confetti Canvas (Must have pointer-events-none to prevent interception) -->
+  <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-40"></canvas>
+
+  <!-- ============================================== -->
+  <!-- SCREEN 1: WELCOME & SETUP -->
+  <!-- ============================================== -->
+  <main id="setupScreen" class="w-full max-w-xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-screen">
+    
+    <!-- Hero Title -->
+    <div class="text-center mb-6">
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 shadow-xl shadow-amber-500/25 mb-4 animate-bounce-slight text-4xl">
+        👍
+      </div>
+      <h1 class="text-4xl sm:text-6xl font-extrabold font-brand tracking-tight bg-gradient-to-r from-amber-300 via-yellow-200 to-emerald-400 bg-clip-text text-transparent">
+        Thumbs Up!
+      </h1>
+      <p class="text-slate-400 mt-2 text-sm sm:text-base max-w-md mx-auto">
+        Tap the tiles! Exactly <span class="text-amber-300 font-bold">10%</span> contain Thumbs Up. Highest score wins!
+      </p>
+    </div>
+
+    <!-- Setup Card -->
+    <div class="w-full bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 backdrop-blur-md shadow-2xl space-y-6">
+      
+      <!-- 1. Number of Players -->
+      <div>
+        <label class="block text-xs sm:text-sm font-semibold tracking-wider text-slate-300 uppercase mb-3 flex items-center justify-between">
+          <span>Number of Players</span>
+          <span id="playerCountLabel" class="text-amber-400 font-bold">4 Players</span>
+        </label>
+        
+        <div class="grid grid-cols-5 gap-2 sm:gap-3" id="playerCountSelector">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Player Color Preview Badges -->
+      <div id="playerColorPreview" class="flex flex-wrap gap-2 justify-center py-2.5 bg-slate-950/70 rounded-2xl p-3 border border-slate-800/80">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- 2. Grid Size Selection -->
+      <div>
+        <label class="block text-xs sm:text-sm font-semibold tracking-wider text-slate-300 uppercase mb-3 flex items-center justify-between">
+          <span>Grid Size</span>
+          <span id="thumbsTargetLabel" class="text-emerald-400 font-medium text-xs">10 Thumbs Up hidden</span>
+        </label>
+        
+        <div class="grid grid-cols-3 gap-2.5 sm:gap-3">
+          <button type="button" data-grid="50" class="grid-btn py-3.5 px-2 rounded-2xl border-2 border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 font-bold transition flex flex-col items-center cursor-pointer">
+            <span class="text-xl sm:text-2xl text-white font-black">50</span>
+            <span class="text-[10px] sm:text-xs text-slate-400 mt-0.5">5 Thumbs (10%)</span>
+          </button>
+          <button type="button" data-grid="100" class="grid-btn active py-3.5 px-2 rounded-2xl border-2 border-amber-400 bg-amber-400/10 font-bold transition flex flex-col items-center cursor-pointer shadow-lg shadow-amber-400/10">
+            <span class="text-xl sm:text-2xl text-amber-300 font-black">100</span>
+            <span class="text-[10px] sm:text-xs text-amber-200/80 mt-0.5">10 Thumbs (10%)</span>
+          </button>
+          <button type="button" data-grid="200" class="grid-btn py-3.5 px-2 rounded-2xl border-2 border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 font-bold transition flex flex-col items-center cursor-pointer">
+            <span class="text-xl sm:text-2xl text-white font-black">200</span>
+            <span class="text-[10px] sm:text-xs text-slate-400 mt-0.5">20 Thumbs (10%)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Hint -->
+      <div class="bg-slate-800/40 rounded-2xl p-3 text-xs text-slate-400 flex items-start gap-2.5 border border-slate-800">
+        <span class="text-lg leading-none">💡</span>
+        <span>Players take turns tapping any tile. Find a 👍 for <strong>+1 Point</strong>. Game ends when all thumbs up or all tiles are found!</span>
+      </div>
+
+      <!-- Start Button -->
+      <button id="startGameBtn" type="button" class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 active:scale-[0.98] text-slate-950 font-extrabold text-xl shadow-xl shadow-amber-500/25 transition cursor-pointer flex items-center justify-center gap-2">
+        <span>Start Game</span>
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+      </button>
+
+    </div>
+  </main>
+
+  <!-- ============================================== -->
+  <!-- SCREEN 2: GAMEPLAY SCREEN -->
+  <!-- ============================================== -->
+  <section id="gameScreen" class="w-full max-w-6xl mx-auto px-2 sm:px-4 py-3 sm:py-5 flex flex-col min-h-screen hidden">
+    
+    <!-- Top Header Bar -->
+    <header class="w-full bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-3xl p-3 sm:p-4 mb-3 shadow-xl">
+      <div class="flex items-center justify-between gap-2">
+        
+        <!-- Logo -->
+        <div class="flex items-center gap-2">
+          <span class="w-9 h-9 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center text-lg font-bold">👍</span>
+          <div>
+            <h2 class="font-brand font-bold text-base sm:text-lg leading-tight text-white">Thumbs Up</h2>
+            <div class="text-[11px] text-slate-400 flex items-center gap-1.5">
+              <span id="gridBadge">100 Tiles</span>
+              <span>•</span>
+              <span id="remainingBadge" class="text-emerald-400 font-semibold">10 Left</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="flex items-center gap-2">
+          <button id="soundToggleBtn" type="button" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition cursor-pointer" title="Toggle Sound">
+            <span id="soundIcon" class="text-base sm:text-lg">🔊</span>
+          </button>
+          <button id="quitGameBtn" type="button" class="px-3 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold border border-rose-500/30 transition cursor-pointer">
+            Quit
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Turn Banner -->
+      <div id="activeTurnBanner" class="mt-3 p-3 rounded-2xl transition-all duration-300 flex items-center justify-between shadow-lg">
+        <div class="flex items-center gap-3">
+          <div id="turnAvatar" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-white font-bold text-base shadow-md">
+            1
+          </div>
+          <div>
+            <span class="text-[10px] uppercase font-bold tracking-widest text-white/75 block">Turn</span>
+            <h3 id="turnPlayerName" class="font-bold text-base sm:text-lg text-white leading-none">Player 1</h3>
+          </div>
+        </div>
+        <div>
+          <span class="text-xs font-extrabold text-white bg-black/25 px-3 py-1.5 rounded-full inline-block border border-white/10 animate-pulse">Tap any tile!</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Scoreboards Strip -->
+    <div class="w-full overflow-x-auto no-scrollbar pb-2 mb-1">
+      <div id="playersScoreContainer" class="flex items-center gap-2 min-w-max px-1">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- Board Area -->
+    <div class="flex-1 flex flex-col items-center justify-center w-full">
+      <div class="w-full bg-slate-900/70 border border-slate-800 rounded-3xl p-2.5 sm:p-4 shadow-inner relative flex flex-col items-center">
+        
+        <!-- Interactive Grid Container -->
+        <div id="boardGrid" class="w-full grid gap-1.5 sm:gap-2 justify-center max-h-[66vh] overflow-y-auto no-scrollbar p-1">
+          <!-- Tile cards created by JS -->
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Live Status Footer -->
+    <footer class="mt-2 py-1 px-3 flex items-center justify-between text-xs text-slate-400">
+      <div>Revealed: <span id="revealedCount" class="text-white font-semibold">0</span> / <span id="totalTilesCount" class="text-white font-semibold">100</span></div>
+      <div>Thumbs Found: <span id="thumbsFoundCount" class="text-amber-400 font-bold">0</span> / <span id="thumbsTargetCount" class="text-amber-400 font-bold">10</span></div>
+    </footer>
+
+  </section>
+
+  <!-- ============================================== -->
+  <!-- CUSTOM QUIT CONFIRMATION MODAL -->
+  <!-- ============================================== -->
+  <div id="quitModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 w-full max-w-xs rounded-3xl p-6 text-center shadow-2xl">
+      <h4 class="text-lg font-bold text-white mb-2">Leave Game?</h4>
+      <p class="text-slate-400 text-xs mb-5">Current game progress will be lost.</p>
+      <div class="grid grid-cols-2 gap-2">
+        <button id="cancelQuitBtn" class="py-2.5 px-3 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700">Cancel</button>
+        <button id="confirmQuitBtn" class="py-2.5 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold">Leave</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: GAME OVER & LEADERBOARD -->
+  <!-- ============================================== -->
+  <div id="gameOverModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 w-full max-w-sm sm:max-w-md rounded-3xl p-6 sm:p-8 text-center shadow-2xl relative overflow-hidden">
+      
+      <!-- Trophy Icon -->
+      <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-yellow-400 to-amber-200 text-slate-950 flex items-center justify-center text-3xl sm:text-4xl mx-auto mb-3 shadow-xl shadow-amber-400/30 animate-bounce-slight">
+        🏆
+      </div>
+
+      <h3 class="text-2xl sm:text-3xl font-extrabold font-brand text-white mb-1">Game Over!</h3>
+      <p id="gameOverReason" class="text-slate-400 text-xs sm:text-sm mb-4">All thumbs up found!</p>
+
+      <!-- Winner Banner -->
+      <div id="winnerBanner" class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 mb-4">
+        <span class="text-[10px] uppercase font-extrabold tracking-widest text-amber-400">Winner</span>
+        <h4 id="winnerText" class="text-xl sm:text-2xl font-black text-amber-300 mt-0.5">Player 1</h4>
+      </div>
+
+      <!-- Leaderboard -->
+      <div id="finalLeaderboard" class="space-y-2 mb-5 max-h-48 overflow-y-auto no-scrollbar">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="grid grid-cols-2 gap-2.5">
+        <button id="rematchBtn" type="button" class="py-3 px-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-sm transition shadow-lg shadow-amber-400/20 cursor-pointer">
+          🔄 Play Again
+        </button>
+        <button id="menuBtn" type="button" class="py-3 px-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm transition border border-slate-700 cursor-pointer">
+          ⚙️ New Setup
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    /* ==========================================================================
+       PLAYER THEMES (Colors, borders, glows)
+       ========================================================================== */
+    const PLAYER_THEMES = [
+      { id: 1, name: 'Player 1', color: '#EF4444', ring: 'ring-rose-500', bg: 'bg-rose-500', border: 'border-rose-500', text: 'text-rose-500', lightBg: 'bg-rose-500/20' },
+      { id: 2, name: 'Player 2', color: '#3B82F6', ring: 'ring-blue-500', bg: 'bg-blue-500', border: 'border-blue-500', text: 'text-blue-500', lightBg: 'bg-blue-500/20' },
+      { id: 3, name: 'Player 3', color: '#10B981', ring: 'ring-emerald-500', bg: 'bg-emerald-500', border: 'border-emerald-500', text: 'text-emerald-500', lightBg: 'bg-emerald-500/20' },
+      { id: 4, name: 'Player 4', color: '#F59E0B', ring: 'ring-amber-500', bg: 'bg-amber-500', border: 'border-amber-500', text: 'text-amber-500', lightBg: 'bg-amber-500/20' },
+      { id: 5, name: 'Player 5', color: '#8B5CF6', ring: 'ring-purple-500', bg: 'bg-purple-500', border: 'border-purple-500', text: 'text-purple-500', lightBg: 'bg-purple-500/20' },
+      { id: 6, name: 'Player 6', color: '#06B6D4', ring: 'ring-cyan-500', bg: 'bg-cyan-500', border: 'border-cyan-500', text: 'text-cyan-500', lightBg: 'bg-cyan-500/20' }
+    ];
+
+    /* ==========================================================================
+       SOUND SYNTHESIZER (Web Audio API)
+       ========================================================================== */
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            this.ctx = new AudioContext();
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      thumbsUp() {
+        if (!this.enabled) return;
+        try {
+          this.init();
+          const now = this.ctx.currentTime;
+          [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = f;
+            gain.gain.setValueAtTime(0, now + i * 0.06);
+            gain.gain.linearRampToValueAtTime(0.2, now + i * 0.06 + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.3);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + i * 0.06);
+            osc.stop(now + i * 0.06 + 0.3);
+          });
+        } catch (e) {}
+      }
+      thumbsDown() {
+        if (!this.enabled) return;
+        try {
+          this.init();
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.exponentialRampToValueAtTime(130, now + 0.22);
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.22);
+        } catch (e) {}
+      }
+      winFanfare() {
+        if (!this.enabled) return;
+        try {
+          this.init();
+          const chords = [440, 554.37, 659.25, 880];
+          const now = this.ctx.currentTime;
+          chords.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.09);
+            gain.gain.setValueAtTime(0.25, now + idx * 0.09);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.7);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + idx * 0.09);
+            osc.stop(now + idx * 0.09 + 0.7);
+          });
+        } catch (e) {}
+      }
+    }
+
+    const sound = new SoundEngine();
+
+    /* ==========================================================================
+       CONFETTI SYSTEM
+       ========================================================================== */
+    const canvas = document.getElementById('confettiCanvas');
+    const ctx = canvas.getContext('2d');
+    let confettiParticles = [];
+    let confettiRunning = false;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Particle {
+      constructor(x, y, isBurst = false) {
+        this.x = x ?? Math.random() * canvas.width;
+        this.y = y ?? (isBurst ? y : -10);
+        this.size = Math.random()
