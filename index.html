@@ -4,8 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Thumbs Up! - Multiplayer Party Game</title>
+  
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,11 +30,16 @@
               '0%': { opacity: '0', transform: 'translateY(0) scale(0.6)' },
               '40%': { opacity: '1', transform: 'translateY(-24px) scale(1.25)' },
               '100%': { opacity: '0', transform: 'translateY(-48px) scale(1)' }
+            },
+            pulseGlow: {
+              '0%, 100%': { opacity: '0.4' },
+              '50%': { opacity: '0.8' }
             }
           },
           animation: {
             'bounce-slight': 'bounceSlight 2.5s ease-in-out infinite',
-            'pop-score': 'popScore 0.85s ease-out forwards'
+            'pop-score': 'popScore 0.85s ease-out forwards',
+            'pulse-glow': 'pulseGlow 2s ease-in-out infinite'
           }
         }
       }
@@ -40,7 +47,7 @@
   </script>
 
   <style>
-    /* Robust 3D Card Flip without click-blocking bugs */
+    /* 3D Card Flip styling */
     .card-scene {
       perspective: 900px;
       touch-action: manipulation;
@@ -56,7 +63,7 @@
       height: 100%;
       transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
       transform-style: preserve-3d;
-      pointer-events: none; /* Let the parent card-scene capture clicks/taps cleanly */
+      pointer-events: none;
     }
 
     .card-scene.revealed .card-flip {
@@ -78,7 +85,7 @@
       transform: rotateY(180deg);
     }
 
-    /* Scrollbars */
+    /* Scrollbars hide */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -87,7 +94,6 @@
       scrollbar-width: none;
     }
 
-    /* Interactive button styles */
     button {
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
@@ -100,12 +106,12 @@
 
   <!-- Ambient Glow Background -->
   <div class="fixed inset-0 pointer-events-none -z-10 overflow-hidden opacity-30">
-    <div class="absolute -top-32 -left-20 w-80 h-80 bg-purple-600/30 rounded-full blur-3xl"></div>
-    <div class="absolute top-1/2 -right-20 w-80 h-80 bg-emerald-600/25 rounded-full blur-3xl"></div>
-    <div class="absolute -bottom-20 left-1/3 w-80 h-80 bg-amber-500/25 rounded-full blur-3xl"></div>
+    <div class="absolute -top-32 -left-20 w-80 h-80 bg-purple-600/30 rounded-full blur-3xl animate-pulse-glow"></div>
+    <div class="absolute top-1/2 -right-20 w-80 h-80 bg-emerald-600/25 rounded-full blur-3xl animate-pulse-glow" style="animation-delay: 1s;"></div>
+    <div class="absolute -bottom-20 left-1/3 w-80 h-80 bg-amber-500/25 rounded-full blur-3xl animate-pulse-glow" style="animation-delay: 0.5s;"></div>
   </div>
 
-  <!-- Confetti Canvas (Must have pointer-events-none to prevent interception) -->
+  <!-- Confetti Canvas -->
   <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-40"></canvas>
 
   <!-- ============================================== -->
@@ -172,7 +178,7 @@
       <!-- Quick Hint -->
       <div class="bg-slate-800/40 rounded-2xl p-3 text-xs text-slate-400 flex items-start gap-2.5 border border-slate-800">
         <span class="text-lg leading-none">💡</span>
-        <span>Players take turns tapping any tile. Find a 👍 for <strong>+1 Point</strong>. Game ends when all thumbs up or all tiles are found!</span>
+        <span>Players take turns tapping any tile. Find a 👍 for <strong>+1 Point</strong> and a extra turn! Game ends when all thumbs up or all tiles are revealed.</span>
       </div>
 
       <!-- Start Button -->
@@ -230,7 +236,7 @@
           </div>
         </div>
         <div>
-          <span class="text-xs font-extrabold text-white bg-black/25 px-3 py-1.5 rounded-full inline-block border border-white/10 animate-pulse">Tap any tile!</span>
+          <span id="turnStatusText" class="text-xs font-extrabold text-white bg-black/25 px-3 py-1.5 rounded-full inline-block border border-white/10">Tap any tile!</span>
         </div>
       </div>
     </header>
@@ -316,9 +322,6 @@
 
   <!-- JAVASCRIPT LOGIC -->
   <script>
-    /* ==========================================================================
-       PLAYER THEMES (Colors, borders, glows)
-       ========================================================================== */
     const PLAYER_THEMES = [
       { id: 1, name: 'Player 1', color: '#EF4444', ring: 'ring-rose-500', bg: 'bg-rose-500', border: 'border-rose-500', text: 'text-rose-500', lightBg: 'bg-rose-500/20' },
       { id: 2, name: 'Player 2', color: '#3B82F6', ring: 'ring-blue-500', bg: 'bg-blue-500', border: 'border-blue-500', text: 'text-blue-500', lightBg: 'bg-blue-500/20' },
@@ -328,9 +331,6 @@
       { id: 6, name: 'Player 6', color: '#06B6D4', ring: 'ring-cyan-500', bg: 'bg-cyan-500', border: 'border-cyan-500', text: 'text-cyan-500', lightBg: 'bg-cyan-500/20' }
     ];
 
-    /* ==========================================================================
-       SOUND SYNTHESIZER (Web Audio API)
-       ========================================================================== */
     class SoundEngine {
       constructor() {
         this.ctx = null;
@@ -409,13 +409,10 @@
 
     const sound = new SoundEngine();
 
-    /* ==========================================================================
-       CONFETTI SYSTEM
-       ========================================================================== */
     const canvas = document.getElementById('confettiCanvas');
     const ctx = canvas.getContext('2d');
     let confettiParticles = [];
-    let confettiRunning = false;
+    let confettiAnimationId = null;
 
     function resizeCanvas() {
       canvas.width = window.innerWidth;
@@ -425,7 +422,434 @@
     resizeCanvas();
 
     class Particle {
-      constructor(x, y, isBurst = false) {
-        this.x = x ?? Math.random() * canvas.width;
-        this.y = y ?? (isBurst ? y : -10);
-        this.size = Math.random()
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = -10;
+        this.size = Math.random() * 8 + 4;
+        this.speedY = Math.random() * 4 + 2;
+        this.speedX = (Math.random() - 0.5) * 3;
+        this.color = ['#EF4444', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'][Math.floor(Math.random() * 6)];
+        this.rotation = Math.random() * 360;
+        this.rotationSpeed = (Math.random() - 0.5) * 6;
+      }
+      update() {
+        this.y += this.speedY;
+        this.x += this.speedX;
+        this.rotation += this.rotationSpeed;
+      }
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate((this.rotation * Math.PI) / 180);
+        ctx.fillStyle = this.color;
+        ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+        ctx.restore();
+      }
+    }
+
+    function triggerConfetti() {
+      confettiParticles = Array.from({ length: 90 }, () => new Particle());
+      if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId);
+      
+      let frames = 0;
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        confettiParticles.forEach((p, index) => {
+          p.update();
+          p.draw();
+          if (p.y > canvas.height) confettiParticles[index] = new Particle();
+        });
+        frames++;
+        if (frames < 220) {
+          confettiAnimationId = requestAnimationFrame(animate);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      animate();
+    }
+
+    let selectedPlayerCount = 4;
+    let selectedGridSize = 100;
+    let players = [];
+    let currentTurnIndex = 0;
+    let boardData = [];
+    let thumbsTarget = 10;
+    let thumbsFound = 0;
+    let revealedCount = 0;
+    let gameActive = false;
+
+    // DOM Elements
+    const setupScreen = document.getElementById('setupScreen');
+    const gameScreen = document.getElementById('gameScreen');
+    const playerCountSelector = document.getElementById('playerCountSelector');
+    const playerCountLabel = document.getElementById('playerCountLabel');
+    const playerColorPreview = document.getElementById('playerColorPreview');
+    const thumbsTargetLabel = document.getElementById('thumbsTargetLabel');
+    const gridBtns = document.querySelectorAll('.grid-btn');
+    const startGameBtn = document.getElementById('startGameBtn');
+    
+    const boardGrid = document.getElementById('boardGrid');
+    const gridBadge = document.getElementById('gridBadge');
+    const remainingBadge = document.getElementById('remainingBadge');
+    const activeTurnBanner = document.getElementById('activeTurnBanner');
+    const turnAvatar = document.getElementById('turnAvatar');
+    const turnPlayerName = document.getElementById('turnPlayerName');
+    const turnStatusText = document.getElementById('turnStatusText');
+    const playersScoreContainer = document.getElementById('playersScoreContainer');
+    const revealedCountEl = document.getElementById('revealedCount');
+    const totalTilesCountEl = document.getElementById('totalTilesCount');
+    const thumbsFoundCountEl = document.getElementById('thumbsFoundCount');
+    const thumbsTargetCountEl = document.getElementById('thumbsTargetCount');
+    
+    const soundToggleBtn = document.getElementById('soundToggleBtn');
+    const soundIcon = document.getElementById('soundIcon');
+    const quitGameBtn = document.getElementById('quitGameBtn');
+    const quitModal = document.getElementById('quitModal');
+    const cancelQuitBtn = document.getElementById('cancelQuitBtn');
+    const confirmQuitBtn = document.getElementById('confirmQuitBtn');
+
+    const gameOverModal = document.getElementById('gameOverModal');
+    const gameOverReason = document.getElementById('gameOverReason');
+    const winnerBanner = document.getElementById('winnerBanner');
+    const winnerText = document.getElementById('winnerText');
+    const finalLeaderboard = document.getElementById('finalLeaderboard');
+    const rematchBtn = document.getElementById('rematchBtn');
+    const menuBtn = document.getElementById('menuBtn');
+
+    function initPlayerSelection() {
+      playerCountSelector.innerHTML = '';
+      [2, 3, 4, 5, 6].forEach(num => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.dataset.count = num;
+        btn.className = `py-3 sm:py-3.5 rounded-2xl font-black text-lg sm:text-xl border-2 transition cursor-pointer flex flex-col items-center justify-center ${
+          num === selectedPlayerCount
+            ? 'border-amber-400 bg-amber-400/10 text-amber-300 shadow-lg shadow-amber-400/10'
+            : 'border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 text-slate-300'
+        }`;
+        btn.innerHTML = `<span>${num}</span><span class="text-[10px] uppercase tracking-tighter font-semibold opacity-75">P</span>`;
+        
+        btn.addEventListener('click', () => {
+          selectedPlayerCount = num;
+          updatePlayerSelectionUI();
+        });
+        playerCountSelector.appendChild(btn);
+      });
+      updatePlayerSelectionUI();
+    }
+
+    function updatePlayerSelectionUI() {
+      playerCountLabel.textContent = `${selectedPlayerCount} Players`;
+      
+      // Highlight active button
+      Array.from(playerCountSelector.children).forEach(btn => {
+        const count = parseInt(btn.dataset.count, 10);
+        if (count === selectedPlayerCount) {
+          btn.className = 'py-3 sm:py-3.5 rounded-2xl font-black text-lg sm:text-xl border-2 border-amber-400 bg-amber-400/10 text-amber-300 shadow-lg shadow-amber-400/10 transition cursor-pointer flex flex-col items-center justify-center';
+        } else {
+          btn.className = 'py-3 sm:py-3.5 rounded-2xl font-black text-lg sm:text-xl border-2 border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 text-slate-300 transition cursor-pointer flex flex-col items-center justify-center';
+        }
+      });
+
+      // Update color preview badges
+      playerColorPreview.innerHTML = '';
+      for (let i = 0; i < selectedPlayerCount; i++) {
+        const theme = PLAYER_THEMES[i];
+        const badge = document.createElement('div');
+        badge.className = `flex items-center gap-1.5 px-3 py-1 rounded-full border border-slate-700/60 text-xs font-semibold ${theme.lightBg} text-white`;
+        badge.innerHTML = `
+          <span class="w-2.5 h-2.5 rounded-full ${theme.bg}"></span>
+          <span>P${i + 1}</span>
+        `;
+        playerColorPreview.appendChild(badge);
+      }
+    }
+
+    gridBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        gridBtns.forEach(b => {
+          b.classList.remove('active', 'border-amber-400', 'bg-amber-400/10', 'shadow-lg', 'shadow-amber-400/10');
+          b.classList.add('border-slate-800', 'bg-slate-950/60');
+          const t = b.querySelector('span:first-child');
+          if (t) t.classList.remove('text-amber-300');
+        });
+        btn.classList.add('active', 'border-amber-400', 'bg-amber-400/10', 'shadow-lg', 'shadow-amber-400/10');
+        btn.classList.remove('border-slate-800', 'bg-slate-950/60');
+        const mainText = btn.querySelector('span:first-child');
+        if (mainText) mainText.classList.add('text-amber-300');
+
+        selectedGridSize = parseInt(btn.dataset.grid, 10);
+        thumbsTarget = Math.round(selectedGridSize * 0.10);
+        thumbsTargetLabel.textContent = `${thumbsTarget} Thumbs Up hidden`;
+      });
+    });
+
+    function initializePlayers() {
+      players = [];
+      for (let i = 0; i < selectedPlayerCount; i++) {
+        players.push({
+          id: i + 1,
+          name: `Player ${i + 1}`,
+          score: 0,
+          theme: PLAYER_THEMES[i]
+        });
+      }
+      currentTurnIndex = 0;
+    }
+
+    startGameBtn.addEventListener('click', () => {
+      sound.init();
+      startGame();
+    });
+
+    function startGame() {
+      initializePlayers();
+      thumbsTarget = Math.round(selectedGridSize * 0.10);
+      thumbsFound = 0;
+      revealedCount = 0;
+      gameActive = true;
+
+      // Create tiles array: 10% thumbs up, 90% misses
+      const thumbsCount = thumbsTarget;
+      const missCount = selectedGridSize - thumbsCount;
+      boardData = [];
+      
+      for (let i = 0; i < thumbsCount; i++) boardData.push({ isThumb: true, revealed: false });
+      for (let i = 0; i < missCount; i++) boardData.push({ isThumb: false, revealed: false });
+
+      // Shuffle using Fisher-Yates
+      for (let i = boardData.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [boardData[i], boardData[j]] = [boardData[j], boardData[i]];
+      }
+
+      // UI updates
+      setupScreen.classList.add('hidden');
+      gameScreen.classList.remove('hidden');
+      gameOverModal.classList.add('hidden');
+
+      gridBadge.textContent = `${selectedGridSize} Tiles`;
+      totalTilesCountEl.textContent = selectedGridSize;
+      thumbsTargetCountEl.textContent = thumbsTarget;
+      thumbsFoundCountEl.textContent = '0';
+      revealedCountEl.textContent = '0';
+
+      renderBoard();
+      updateScoreboardUI();
+      updateTurnBanner();
+    }
+
+    function renderBoard() {
+      boardGrid.innerHTML = '';
+
+      // Grid columns responsiveness
+      let colsClass = 'grid-cols-5 sm:grid-cols-10';
+      if (selectedGridSize === 50) {
+        colsClass = 'grid-cols-5 sm:grid-cols-10 max-w-xl';
+      } else if (selectedGridSize === 100) {
+        colsClass = 'grid-cols-5 sm:grid-cols-10 max-w-2xl';
+      } else if (selectedGridSize === 200) {
+        colsClass = 'grid-cols-8 sm:grid-cols-10 md:grid-cols-12 max-w-4xl';
+      }
+      boardGrid.className = `w-full grid ${colsClass} gap-1.5 sm:gap-2 justify-center max-h-[62vh] overflow-y-auto no-scrollbar p-1`;
+
+      boardData.forEach((tile, index) => {
+        const scene = document.createElement('div');
+        scene.className = 'card-scene h-11 sm:h-14';
+        scene.dataset.index = index;
+
+        scene.innerHTML = `
+          <div class="card-flip">
+            <!-- Front (Unrevealed) -->
+            <div class="card-face bg-slate-800 border-2 border-slate-700/80 hover:border-amber-400/50 shadow-md text-xs font-bold text-slate-400 transition hover:scale-[1.03]">
+              ${index + 1}
+            </div>
+            <!-- Back (Revealed) -->
+            <div class="card-face card-back ${tile.isThumb ? 'bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 font-black shadow-lg shadow-amber-500/30' : 'bg-slate-950 border border-slate-800/80 text-slate-600 font-bold'}">
+              <span class="text-lg sm:text-2xl">${tile.isThumb ? '👍' : '•'}</span>
+            </div>
+          </div>
+        `;
+
+        scene.addEventListener('click', () => handleTileClick(index, scene));
+        boardGrid.appendChild(scene);
+      });
+    }
+
+    function handleTileClick(index, element) {
+      if (!gameActive || boardData[index].revealed) return;
+
+      boardData[index].revealed = true;
+      revealedCount++;
+      revealedCountEl.textContent = revealedCount;
+
+      element.classList.add('revealed');
+
+      const isThumb = boardData[index].isThumb;
+      const currentPlayer = players[currentTurnIndex];
+
+      if (isThumb) {
+        thumbsFound++;
+        currentPlayer.score++;
+        thumbsFoundCountEl.textContent = thumbsFound;
+        remainingBadge.textContent = `${thumbsTarget - thumbsFound} Left`;
+
+        sound.thumbsUp();
+        triggerScorePop(element, currentPlayer);
+
+        // Turn bonus notification
+        turnStatusText.textContent = `${currentPlayer.name} found 👍! Bonus Turn!`;
+        turnStatusText.className = "text-xs font-extrabold text-amber-300 bg-amber-500/30 px-3 py-1.5 rounded-full inline-block border border-amber-400/40 animate-pulse";
+      } else {
+        sound.thumbsDown();
+        turnStatusText.textContent = "Miss! Passing turn...";
+        turnStatusText.className = "text-xs font-bold text-slate-400 bg-slate-800 px-3 py-1.5 rounded-full inline-block";
+
+        // Pass turn to next player
+        currentTurnIndex = (currentTurnIndex + 1) % players.length;
+      }
+
+      updateScoreboardUI();
+      
+      setTimeout(() => {
+        if (gameActive) updateTurnBanner();
+      }, 400);
+
+      checkGameOver();
+    }
+
+    function triggerScorePop(targetElement, player) {
+      const rect = targetElement.getBoundingClientRect();
+      const pop = document.createElement('div');
+      pop.className = `fixed z-50 pointer-events-none font-black text-xl sm:text-2xl animate-pop-score ${player.theme.text}`;
+      pop.style.left = `${rect.left + rect.width / 2 - 12}px`;
+      pop.style.top = `${rect.top}px`;
+      pop.textContent = '+1 👍';
+      document.body.appendChild(pop);
+
+      setTimeout(() => pop.remove(), 850);
+    }
+
+    function updateTurnBanner() {
+      const p = players[currentTurnIndex];
+      activeTurnBanner.className = `mt-3 p-3 rounded-2xl transition-all duration-300 flex items-center justify-between shadow-lg ${p.theme.lightBg} border ${p.theme.border}`;
+      
+      turnAvatar.className = `w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-md ${p.theme.bg}`;
+      turnAvatar.textContent = p.id;
+      
+      turnPlayerName.textContent = p.name;
+    }
+
+    function updateScoreboardUI() {
+      playersScoreContainer.innerHTML = '';
+      players.forEach((p, idx) => {
+        const isCurrent = idx === currentTurnIndex;
+        const card = document.createElement('div');
+        card.className = `flex items-center gap-2.5 px-3.5 py-2 rounded-2xl border transition-all ${
+          isCurrent 
+            ? `${p.theme.lightBg} ${p.theme.border} ring-2 ${p.theme.ring} scale-105 shadow-md` 
+            : 'bg-slate-900/80 border-slate-800 opacity-70'
+        }`;
+
+        card.innerHTML = `
+          <div class="w-7 h-7 rounded-lg ${p.theme.bg} text-white font-bold flex items-center justify-center text-xs">
+            ${p.id}
+          </div>
+          <div>
+            <div class="text-[10px] uppercase font-bold text-slate-400 leading-none">${p.name}</div>
+            <div class="text-sm font-black text-white leading-tight">${p.score} <span class="text-[10px] text-amber-400 font-normal">pts</span></div>
+          </div>
+        `;
+        playersScoreContainer.appendChild(card);
+      });
+    }
+
+    function checkGameOver() {
+      if (thumbsFound >= thumbsTarget) {
+        endGame('All 10% Thumbs Up found!');
+      } else if (revealedCount >= selectedGridSize) {
+        endGame('All tiles revealed!');
+      }
+    }
+
+    function endGame(reasonText) {
+      gameActive = false;
+      sound.winFanfare();
+      triggerConfetti();
+
+      gameOverReason.textContent = reasonText;
+
+      // Sort leaderboard
+      const sorted = [...players].sort((a, b) => b.score - a.score);
+      const topScore = sorted[0].score;
+      const winners = sorted.filter(p => p.score === topScore);
+
+      if (winners.length === 1) {
+        winnerText.textContent = `${winners[0].name} Wins! (${winners[0].score} 👍)`;
+        winnerBanner.className = `p-3.5 rounded-2xl ${winners[0].theme.lightBg} border ${winners[0].theme.border} mb-4`;
+      } else {
+        winnerText.textContent = `Tie! ${winners.map(w => w.name).join(' & ')} (${topScore} 👍)`;
+        winnerBanner.className = 'p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 mb-4';
+      }
+
+      // Leaderboard markup
+      finalLeaderboard.innerHTML = '';
+      sorted.forEach((p, rank) => {
+        const item = document.createElement('div');
+        item.className = `flex items-center justify-between p-2.5 rounded-xl ${p.theme.lightBg} border border-slate-800 text-xs font-semibold`;
+        item.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="w-5 text-center font-bold text-slate-400">#${rank + 1}</span>
+            <span class="w-3 h-3 rounded-full ${p.theme.bg}"></span>
+            <span class="text-white font-bold">${p.name}</span>
+          </div>
+          <div class="text-amber-300 font-extrabold text-sm">${p.score} 👍</div>
+        `;
+        finalLeaderboard.appendChild(item);
+      });
+
+      setTimeout(() => {
+        gameOverModal.classList.remove('hidden');
+      }, 600);
+    }
+
+    rematchBtn.addEventListener('click', () => {
+      gameOverModal.classList.add('hidden');
+      startGame();
+    });
+
+    menuBtn.addEventListener('click', () => {
+      gameOverModal.classList.add('hidden');
+      gameScreen.classList.add('hidden');
+      setupScreen.classList.remove('hidden');
+    });
+
+    // Sound Toggle
+    soundToggleBtn.addEventListener('click', () => {
+      sound.enabled = !sound.enabled;
+      soundIcon.textContent = sound.enabled ? '🔊' : '🔇';
+      soundToggleBtn.classList.toggle('opacity-50', !sound.enabled);
+    });
+
+    // Custom Quit Confirmation Modal
+    quitGameBtn.addEventListener('click', () => {
+      quitModal.classList.remove('hidden');
+    });
+
+    cancelQuitBtn.addEventListener('click', () => {
+      quitModal.classList.add('hidden');
+    });
+
+    confirmQuitBtn.addEventListener('click', () => {
+      quitModal.classList.add('hidden');
+      gameScreen.classList.add('hidden');
+      setupScreen.classList.remove('hidden');
+      gameActive = false;
+    });
+
+    initPlayerSelection();
+
+  </script>
+</body>
+</html>
