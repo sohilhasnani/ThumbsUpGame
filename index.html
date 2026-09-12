@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full overflow-hidden">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Thumbs Up! - Multiplayer Party Game</title>
   
   <!-- Tailwind CSS -->
@@ -11,7 +11,7 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
 
   <script>
     tailwind.config = {
@@ -22,24 +22,14 @@
             sans: ['Outfit', 'sans-serif'],
           },
           keyframes: {
-            bounceSlight: {
-              '0%, 100%': { transform: 'translateY(0)' },
-              '50%': { transform: 'translateY(-5px)' }
-            },
             popScore: {
               '0%': { opacity: '0', transform: 'translateY(0) scale(0.6)' },
-              '40%': { opacity: '1', transform: 'translateY(-24px) scale(1.25)' },
-              '100%': { opacity: '0', transform: 'translateY(-48px) scale(1)' }
-            },
-            pulseGlow: {
-              '0%, 100%': { opacity: '0.4' },
-              '50%': { opacity: '0.8' }
+              '35%': { opacity: '1', transform: 'translateY(-20px) scale(1.2)' },
+              '100%': { opacity: '0', transform: 'translateY(-36px) scale(1)' }
             }
           },
           animation: {
-            'bounce-slight': 'bounceSlight 2.5s ease-in-out infinite',
-            'pop-score': 'popScore 0.85s ease-out forwards',
-            'pulse-glow': 'pulseGlow 2s ease-in-out infinite'
+            'pop-score': 'popScore 0.8s ease-out forwards'
           }
         }
       }
@@ -47,21 +37,33 @@
   </script>
 
   <style>
-    /* 3D Card Flip styling */
-    .card-scene {
-      perspective: 900px;
+    /* Full viewport height lock across mobile browsers */
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      width: 100%;
+      overflow: hidden;
       touch-action: manipulation;
-      cursor: pointer;
-      user-select: none;
       -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* 3D Tile Flip */
+    .card-scene {
+      perspective: 600px;
+      cursor: pointer;
       -webkit-tap-highlight-color: transparent;
+      width: 100%;
+      height: 100%;
+      position: relative;
     }
     
     .card-flip {
-      position: relative;
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
-      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
       transform-style: preserve-3d;
       pointer-events: none;
     }
@@ -78,14 +80,14 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 0.75rem;
+      border-radius: 0.375rem;
     }
 
     .card-back {
       transform: rotateY(180deg);
     }
 
-    /* Scrollbars hide */
+    /* Scrollbar suppression */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -97,240 +99,208 @@
     button {
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
-      user-select: none;
     }
   </style>
 </head>
 
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col items-center selection:bg-amber-400 selection:text-slate-950 overflow-x-hidden">
-
-  <!-- Ambient Glow Background -->
-  <div class="fixed inset-0 pointer-events-none -z-10 overflow-hidden opacity-30">
-    <div class="absolute -top-32 -left-20 w-80 h-80 bg-purple-600/30 rounded-full blur-3xl animate-pulse-glow"></div>
-    <div class="absolute top-1/2 -right-20 w-80 h-80 bg-emerald-600/25 rounded-full blur-3xl animate-pulse-glow" style="animation-delay: 1s;"></div>
-    <div class="absolute -bottom-20 left-1/3 w-80 h-80 bg-amber-500/25 rounded-full blur-3xl animate-pulse-glow" style="animation-delay: 0.5s;"></div>
-  </div>
+<body class="bg-slate-950 text-slate-100 font-sans flex flex-col h-full h-[100dvh] w-full overflow-hidden selection:bg-amber-400 selection:text-slate-950">
 
   <!-- Confetti Canvas -->
-  <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-40"></canvas>
+  <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
 
-  <!-- ============================================== -->
-  <!-- SCREEN 1: WELCOME & SETUP -->
-  <!-- ============================================== -->
-  <main id="setupScreen" class="w-full max-w-xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-screen">
+  <!-- Ambient Light Accents -->
+  <div class="fixed inset-0 pointer-events-none -z-10 overflow-hidden opacity-25">
+    <div class="absolute -top-20 -left-20 w-72 h-72 bg-purple-600/30 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/2 -right-20 w-72 h-72 bg-emerald-600/25 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-20 left-1/3 w-72 h-72 bg-amber-500/25 rounded-full blur-3xl"></div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- SCREEN 1: COMPACT SETUP SCREEN (Fits 100% in One Page) -->
+  <!-- ========================================================= -->
+  <main id="setupScreen" class="h-full w-full max-w-md mx-auto px-4 py-3 flex flex-col justify-between items-center text-center">
     
-    <!-- Hero Title -->
-    <div class="text-center mb-6">
-      <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 shadow-xl shadow-amber-500/25 mb-4 animate-bounce-slight text-4xl">
+    <!-- Top Hero Section -->
+    <header class="pt-1 sm:pt-2">
+      <div class="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 shadow-lg shadow-amber-500/20 mb-2 text-2xl sm:text-3xl">
         👍
       </div>
-      <h1 class="text-4xl sm:text-6xl font-extrabold font-brand tracking-tight bg-gradient-to-r from-amber-300 via-yellow-200 to-emerald-400 bg-clip-text text-transparent">
+      <h1 class="text-3xl sm:text-4xl font-extrabold font-brand tracking-tight bg-gradient-to-r from-amber-300 via-yellow-200 to-emerald-400 bg-clip-text text-transparent leading-none">
         Thumbs Up!
       </h1>
-      <p class="text-slate-400 mt-2 text-sm sm:text-base max-w-md mx-auto">
-        Tap the tiles! Exactly <span class="text-amber-300 font-bold">10%</span> contain Thumbs Up. Highest score wins!
+      <p class="text-slate-400 text-xs sm:text-sm mt-1">
+        Exactly <span class="text-amber-300 font-bold">10%</span> contain Thumbs Up. Highest score wins!
       </p>
-    </div>
+    </header>
 
-    <!-- Setup Card -->
-    <div class="w-full bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 backdrop-blur-md shadow-2xl space-y-6">
+    <!-- Options Box -->
+    <section class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-3 sm:p-4 backdrop-blur-md shadow-xl flex flex-col gap-3 my-auto">
       
-      <!-- 1. Number of Players -->
+      <!-- 1. Player Count Selection -->
       <div>
-        <label class="block text-xs sm:text-sm font-semibold tracking-wider text-slate-300 uppercase mb-3 flex items-center justify-between">
-          <span>Number of Players</span>
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+          <span>Players</span>
           <span id="playerCountLabel" class="text-amber-400 font-bold">4 Players</span>
-        </label>
-        
-        <div class="grid grid-cols-5 gap-2 sm:gap-3" id="playerCountSelector">
-          <!-- Populated by JS -->
+        </div>
+        <div class="grid grid-cols-5 gap-1.5" id="playerCountSelector">
+          <!-- Rendered by JS -->
         </div>
       </div>
 
       <!-- Player Color Preview Badges -->
-      <div id="playerColorPreview" class="flex flex-wrap gap-2 justify-center py-2.5 bg-slate-950/70 rounded-2xl p-3 border border-slate-800/80">
+      <div id="playerColorPreview" class="flex flex-wrap gap-1.5 justify-center py-1.5 px-2 bg-slate-950/70 rounded-xl border border-slate-800/80">
         <!-- Rendered by JS -->
       </div>
 
       <!-- 2. Grid Size Selection -->
       <div>
-        <label class="block text-xs sm:text-sm font-semibold tracking-wider text-slate-300 uppercase mb-3 flex items-center justify-between">
-          <span>Grid Size</span>
-          <span id="thumbsTargetLabel" class="text-emerald-400 font-medium text-xs">10 Thumbs Up hidden</span>
-        </label>
-        
-        <div class="grid grid-cols-3 gap-2.5 sm:gap-3">
-          <button type="button" data-grid="50" class="grid-btn py-3.5 px-2 rounded-2xl border-2 border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 font-bold transition flex flex-col items-center cursor-pointer">
-            <span class="text-xl sm:text-2xl text-white font-black">50</span>
-            <span class="text-[10px] sm:text-xs text-slate-400 mt-0.5">5 Thumbs (10%)</span>
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+          <span>Total Tiles</span>
+          <span id="thumbsTargetLabel" class="text-emerald-400 font-medium">10 Thumbs Up hidden</span>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" data-grid="50" class="grid-btn py-2 px-1 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 transition cursor-pointer flex flex-col items-center">
+            <span class="text-lg font-black text-white leading-tight">50</span>
+            <span class="text-[10px] text-slate-400">5 Thumbs (10%)</span>
           </button>
-          <button type="button" data-grid="100" class="grid-btn active py-3.5 px-2 rounded-2xl border-2 border-amber-400 bg-amber-400/10 font-bold transition flex flex-col items-center cursor-pointer shadow-lg shadow-amber-400/10">
-            <span class="text-xl sm:text-2xl text-amber-300 font-black">100</span>
-            <span class="text-[10px] sm:text-xs text-amber-200/80 mt-0.5">10 Thumbs (10%)</span>
+          <button type="button" data-grid="100" class="grid-btn active py-2 px-1 rounded-xl border-2 border-amber-400 bg-amber-400/10 transition cursor-pointer flex flex-col items-center shadow-md shadow-amber-400/10">
+            <span class="text-lg font-black text-amber-300 leading-tight">100</span>
+            <span class="text-[10px] text-amber-200/80">10 Thumbs (10%)</span>
           </button>
-          <button type="button" data-grid="200" class="grid-btn py-3.5 px-2 rounded-2xl border-2 border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 font-bold transition flex flex-col items-center cursor-pointer">
-            <span class="text-xl sm:text-2xl text-white font-black">200</span>
-            <span class="text-[10px] sm:text-xs text-slate-400 mt-0.5">20 Thumbs (10%)</span>
+          <button type="button" data-grid="200" class="grid-btn py-2 px-1 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 transition cursor-pointer flex flex-col items-center">
+            <span class="text-lg font-black text-white leading-tight">200</span>
+            <span class="text-[10px] text-slate-400">20 Thumbs (10%)</span>
           </button>
         </div>
       </div>
 
-      <!-- Quick Hint -->
-      <div class="bg-slate-800/40 rounded-2xl p-3 text-xs text-slate-400 flex items-start gap-2.5 border border-slate-800">
-        <span class="text-lg leading-none">💡</span>
-        <span>Players take turns tapping any tile. Find a 👍 for <strong>+1 Point</strong> and a extra turn! Game ends when all thumbs up or all tiles are revealed.</span>
+      <!-- Compact Rules Hint -->
+      <div class="bg-slate-800/40 rounded-xl p-2 text-[11px] text-slate-400 flex items-center gap-2 border border-slate-800 leading-tight text-left">
+        <span class="text-base leading-none">💡</span>
+        <span>Tap any tile! 👍 gives <strong>+1 Point</strong> and an <strong>extra turn</strong>. Misses pass the turn!</span>
       </div>
 
-      <!-- Start Button -->
-      <button id="startGameBtn" type="button" class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 active:scale-[0.98] text-slate-950 font-extrabold text-xl shadow-xl shadow-amber-500/25 transition cursor-pointer flex items-center justify-center gap-2">
-        <span>Start Game</span>
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-      </button>
+    </section>
 
-    </div>
+    <!-- Start Button -->
+    <footer class="w-full pb-1 sm:pb-2">
+      <button id="startGameBtn" type="button" class="w-full py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:brightness-110 active:scale-[0.99] text-slate-950 font-extrabold text-lg shadow-lg shadow-amber-500/20 transition cursor-pointer flex items-center justify-center gap-2">
+        <span>Start Game</span>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+      </button>
+    </footer>
+
   </main>
 
-  <!-- ============================================== -->
-  <!-- SCREEN 2: GAMEPLAY SCREEN -->
-  <!-- ============================================== -->
-  <section id="gameScreen" class="w-full max-w-6xl mx-auto px-2 sm:px-4 py-3 sm:py-5 flex flex-col min-h-screen hidden">
+  <!-- ========================================================= -->
+  <!-- SCREEN 2: GAMEPLAY SCREEN (Strict Zero-Scroll Layout) -->
+  <!-- ========================================================= -->
+  <section id="gameScreen" class="h-full h-[100dvh] w-full max-w-5xl mx-auto px-2 py-1.5 sm:px-3 sm:py-2 flex flex-col justify-between hidden">
     
-    <!-- Top Header Bar -->
-    <header class="w-full bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-3xl p-3 sm:p-4 mb-3 shadow-xl">
-      <div class="flex items-center justify-between gap-2">
-        
-        <!-- Logo -->
-        <div class="flex items-center gap-2">
-          <span class="w-9 h-9 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center text-lg font-bold">👍</span>
-          <div>
-            <h2 class="font-brand font-bold text-base sm:text-lg leading-tight text-white">Thumbs Up</h2>
-            <div class="text-[11px] text-slate-400 flex items-center gap-1.5">
-              <span id="gridBadge">100 Tiles</span>
-              <span>•</span>
-              <span id="remainingBadge" class="text-emerald-400 font-semibold">10 Left</span>
-            </div>
+    <!-- Unified Top Control Header -->
+    <header class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2 backdrop-blur-md shadow-md shrink-0 flex items-center justify-between gap-2">
+      
+      <!-- Brand & Stats -->
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-400 text-slate-950 flex items-center justify-center text-sm sm:text-base font-bold shrink-0">👍</div>
+        <div class="flex flex-col">
+          <span class="font-brand font-bold text-xs sm:text-sm text-white leading-tight">Thumbs Up</span>
+          <div class="text-[10px] sm:text-xs text-slate-400 flex items-center gap-1 leading-none">
+            <span id="gridBadge">100 Tiles</span>
+            <span>•</span>
+            <span id="remainingBadge" class="text-amber-400 font-semibold">10 Left</span>
           </div>
         </div>
-
-        <!-- Action buttons -->
-        <div class="flex items-center gap-2">
-          <button id="soundToggleBtn" type="button" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition cursor-pointer" title="Toggle Sound">
-            <span id="soundIcon" class="text-base sm:text-lg">🔊</span>
-          </button>
-          <button id="quitGameBtn" type="button" class="px-3 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold border border-rose-500/30 transition cursor-pointer">
-            Quit
-          </button>
-        </div>
-
       </div>
 
-      <!-- Turn Banner -->
-      <div id="activeTurnBanner" class="mt-3 p-3 rounded-2xl transition-all duration-300 flex items-center justify-between shadow-lg">
-        <div class="flex items-center gap-3">
-          <div id="turnAvatar" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-white font-bold text-base shadow-md">
-            1
-          </div>
-          <div>
-            <span class="text-[10px] uppercase font-bold tracking-widest text-white/75 block">Turn</span>
-            <h3 id="turnPlayerName" class="font-bold text-base sm:text-lg text-white leading-none">Player 1</h3>
-          </div>
-        </div>
-        <div>
-          <span id="turnStatusText" class="text-xs font-extrabold text-white bg-black/25 px-3 py-1.5 rounded-full inline-block border border-white/10">Tap any tile!</span>
-        </div>
+      <!-- Dynamic Active Turn Pill -->
+      <div id="activeTurnBanner" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all duration-200">
+        <div id="turnAvatar" class="w-5 h-5 rounded-full flex items-center justify-center text-white font-extrabold text-[10px]">1</div>
+        <span id="turnPlayerName" class="font-bold text-xs text-white">Player 1</span>
+        <span id="turnStatusText" class="text-[10px] font-semibold text-slate-300 hidden sm:inline">• Your turn</span>
       </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-1.5">
+        <button id="soundToggleBtn" type="button" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center text-xs sm:text-sm transition cursor-pointer" title="Toggle Sound">
+          <span id="soundIcon">🔊</span>
+        </button>
+        <button id="quitGameBtn" type="button" class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 text-xs font-bold border border-rose-500/30 transition cursor-pointer">
+          Quit
+        </button>
+      </div>
+
     </header>
 
-    <!-- Scoreboards Strip -->
-    <div class="w-full overflow-x-auto no-scrollbar pb-2 mb-1">
-      <div id="playersScoreContainer" class="flex items-center gap-2 min-w-max px-1">
+    <!-- Compact Scores Bar -->
+    <div class="w-full shrink-0 my-1 overflow-x-auto no-scrollbar py-0.5">
+      <div id="playersScoreContainer" class="flex items-center justify-center gap-1.5 min-w-max px-1">
         <!-- Rendered dynamically -->
       </div>
     </div>
 
-    <!-- Board Area -->
-    <div class="flex-1 flex flex-col items-center justify-center w-full">
-      <div class="w-full bg-slate-900/70 border border-slate-800 rounded-3xl p-2.5 sm:p-4 shadow-inner relative flex flex-col items-center">
-        
-        <!-- Interactive Grid Container -->
-        <div id="boardGrid" class="w-full grid gap-1.5 sm:gap-2 justify-center max-h-[66vh] overflow-y-auto no-scrollbar p-1">
-          <!-- Tile cards created by JS -->
-        </div>
-
+    <!-- Interactive Board Container: Expands cleanly within available space, NO SCROLL -->
+    <main class="flex-1 min-h-0 w-full flex items-center justify-center relative p-0.5 sm:p-1 overflow-hidden">
+      <div id="boardGrid" class="w-full h-full max-w-full max-h-full grid justify-center items-center">
+        <!-- Interactive Cards rendered dynamically with exact col/row counts -->
       </div>
-    </div>
+    </main>
 
-    <!-- Live Status Footer -->
-    <footer class="mt-2 py-1 px-3 flex items-center justify-between text-xs text-slate-400">
-      <div>Revealed: <span id="revealedCount" class="text-white font-semibold">0</span> / <span id="totalTilesCount" class="text-white font-semibold">100</span></div>
-      <div>Thumbs Found: <span id="thumbsFoundCount" class="text-amber-400 font-bold">0</span> / <span id="thumbsTargetCount" class="text-amber-400 font-bold">10</span></div>
+    <!-- Bottom Micro-Status Bar -->
+    <footer class="w-full shrink-0 bg-slate-900/70 border border-slate-800/80 rounded-xl px-2.5 py-1 text-[10px] sm:text-xs text-slate-400 flex items-center justify-between">
+      <div>Revealed: <span id="revealedCount" class="text-white font-bold">0</span> / <span id="totalTilesCount" class="text-white font-bold">100</span></div>
+      <div id="statusMessage" class="text-slate-300 truncate px-2 font-medium">Tap any tile to begin!</div>
+      <div>👍 Found: <span id="thumbsFoundCount" class="text-amber-400 font-bold">0</span> / <span id="thumbsTargetCount" class="text-amber-400 font-bold">10</span></div>
     </footer>
 
   </section>
 
-  <!-- ============================================== -->
-  <!-- CUSTOM QUIT CONFIRMATION MODAL -->
-  <!-- ============================================== -->
-  <div id="quitModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-700 w-full max-w-xs rounded-3xl p-6 text-center shadow-2xl">
-      <h4 class="text-lg font-bold text-white mb-2">Leave Game?</h4>
-      <p class="text-slate-400 text-xs mb-5">Current game progress will be lost.</p>
+  <!-- Quit Confirmation Modal -->
+  <div id="quitModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700 w-full max-w-xs rounded-2xl p-5 text-center shadow-2xl">
+      <h4 class="text-base font-bold text-white mb-1.5">Quit Match?</h4>
+      <p class="text-slate-400 text-xs mb-4">Current progress will be reset.</p>
       <div class="grid grid-cols-2 gap-2">
-        <button id="cancelQuitBtn" class="py-2.5 px-3 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700">Cancel</button>
-        <button id="confirmQuitBtn" class="py-2.5 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold">Leave</button>
+        <button id="cancelQuitBtn" class="py-2 px-3 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700">Cancel</button>
+        <button id="confirmQuitBtn" class="py-2 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold">Quit</button>
       </div>
     </div>
   </div>
 
-  <!-- ============================================== -->
-  <!-- MODAL: GAME OVER & LEADERBOARD -->
-  <!-- ============================================== -->
-  <div id="gameOverModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-700 w-full max-w-sm sm:max-w-md rounded-3xl p-6 sm:p-8 text-center shadow-2xl relative overflow-hidden">
-      
-      <!-- Trophy Icon -->
-      <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-yellow-400 to-amber-200 text-slate-950 flex items-center justify-center text-3xl sm:text-4xl mx-auto mb-3 shadow-xl shadow-amber-400/30 animate-bounce-slight">
+  <!-- Game Over & Leaderboard Modal -->
+  <div id="gameOverModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 hidden">
+    <div class="bg-slate-900 border border-slate-700 w-full max-w-xs sm:max-w-sm rounded-2xl p-4 sm:p-6 text-center shadow-2xl relative">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-yellow-400 to-amber-200 text-slate-950 flex items-center justify-center text-2xl mx-auto mb-2 shadow-lg shadow-amber-400/20">
         🏆
       </div>
-
-      <h3 class="text-2xl sm:text-3xl font-extrabold font-brand text-white mb-1">Game Over!</h3>
-      <p id="gameOverReason" class="text-slate-400 text-xs sm:text-sm mb-4">All thumbs up found!</p>
+      <h3 class="text-xl sm:text-2xl font-extrabold font-brand text-white mb-0.5">Game Over!</h3>
+      <p id="gameOverReason" class="text-slate-400 text-xs mb-3">All thumbs up found!</p>
 
       <!-- Winner Banner -->
-      <div id="winnerBanner" class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 mb-4">
-        <span class="text-[10px] uppercase font-extrabold tracking-widest text-amber-400">Winner</span>
-        <h4 id="winnerText" class="text-xl sm:text-2xl font-black text-amber-300 mt-0.5">Player 1</h4>
+      <div id="winnerBanner" class="py-2 px-3 rounded-xl bg-amber-500/10 border border-amber-500/30 mb-3">
+        <span class="text-[10px] uppercase font-bold tracking-widest text-amber-400">Winner</span>
+        <h4 id="winnerText" class="text-lg sm:text-xl font-black text-amber-300">Player 1</h4>
       </div>
 
-      <!-- Leaderboard -->
-      <div id="finalLeaderboard" class="space-y-2 mb-5 max-h-48 overflow-y-auto no-scrollbar">
+      <!-- Compact Leaderboard -->
+      <div id="finalLeaderboard" class="space-y-1.5 mb-4 max-h-36 overflow-y-auto no-scrollbar">
         <!-- Rendered by JS -->
       </div>
 
       <!-- Action Buttons -->
-      <div class="grid grid-cols-2 gap-2.5">
-        <button id="rematchBtn" type="button" class="py-3 px-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-sm transition shadow-lg shadow-amber-400/20 cursor-pointer">
+      <div class="grid grid-cols-2 gap-2">
+        <button id="rematchBtn" type="button" class="py-2.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs transition shadow-md shadow-amber-400/20 cursor-pointer">
           🔄 Play Again
         </button>
-        <button id="menuBtn" type="button" class="py-3 px-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm transition border border-slate-700 cursor-pointer">
+        <button id="menuBtn" type="button" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition border border-slate-700 cursor-pointer">
           ⚙️ New Setup
         </button>
       </div>
-
     </div>
   </div>
 
-  <!-- JAVASCRIPT LOGIC -->
   <script>
-    const PLAYER_THEMES = [
-      { id: 1, name: 'Player 1', color: '#EF4444', ring: 'ring-rose-500', bg: 'bg-rose-500', border: 'border-rose-500', text: 'text-rose-500', lightBg: 'bg-rose-500/20' },
-      { id: 2, name: 'Player 2', color: '#3B82F6', ring: 'ring-blue-500', bg: 'bg-blue-500', border: 'border-blue-500', text: 'text-blue-500', lightBg: 'bg-blue-500/20' },
-      { id: 3, name: 'Player 3', color: '#10B981', ring: 'ring-emerald-500', bg: 'bg-emerald-500', border: 'border-emerald-500', text: 'text-emerald-500', lightBg: 'bg-emerald-500/20' },
-      { id: 4, name: 'Player 4', color: '#F59E0B', ring: 'ring-amber-500', bg: 'bg-amber-500', border: 'border-amber-500', text: 'text-amber-500', lightBg: 'bg-amber-500/20' },
-      { id: 5, name: 'Player 5', color: '#8B5CF6', ring: 'ring-purple-500', bg: 'bg-purple-500', border: 'border-purple-500', text: 'text-purple-500', lightBg: 'bg-purple-500/20' },
-      { id: 6, name: 'Player 6', color: '#06B6D4', ring: 'ring-cyan-500', bg: 'bg-cyan-500', border: 'border-cyan-500', text: 'text-cyan-500', lightBg: 'bg-cyan-500/20' }
-    ];
-
+    /* Sound Synthesizer via Web Audio API */
     class SoundEngine {
       constructor() {
         this.ctx = null;
@@ -339,9 +309,7 @@
       init() {
         if (!this.ctx) {
           const AudioContext = window.AudioContext || window.webkitAudioContext;
-          if (AudioContext) {
-            this.ctx = new AudioContext();
-          }
+          if (AudioContext) this.ctx = new AudioContext();
         }
         if (this.ctx && this.ctx.state === 'suspended') {
           this.ctx.resume();
@@ -357,13 +325,13 @@
             const gain = this.ctx.createGain();
             osc.type = 'triangle';
             osc.frequency.value = f;
-            gain.gain.setValueAtTime(0, now + i * 0.06);
-            gain.gain.linearRampToValueAtTime(0.2, now + i * 0.06 + 0.02);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.3);
+            gain.gain.setValueAtTime(0, now + i * 0.05);
+            gain.gain.linearRampToValueAtTime(0.18, now + i * 0.05 + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.25);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
-            osc.start(now + i * 0.06);
-            osc.stop(now + i * 0.06 + 0.3);
+            osc.start(now + i * 0.05);
+            osc.stop(now + i * 0.05 + 0.25);
           });
         } catch (e) {}
       }
@@ -375,33 +343,33 @@
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(300, now);
-          osc.frequency.exponentialRampToValueAtTime(130, now + 0.22);
-          gain.gain.setValueAtTime(0.18, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+          osc.frequency.setValueAtTime(260, now);
+          osc.frequency.exponentialRampToValueAtTime(130, now + 0.18);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
           osc.connect(gain);
           gain.connect(this.ctx.destination);
           osc.start(now);
-          osc.stop(now + 0.22);
+          osc.stop(now + 0.18);
         } catch (e) {}
       }
       winFanfare() {
         if (!this.enabled) return;
         try {
           this.init();
-          const chords = [440, 554.37, 659.25, 880];
+          const notes = [440, 554.37, 659.25, 880];
           const now = this.ctx.currentTime;
-          chords.forEach((freq, idx) => {
+          notes.forEach((freq, idx) => {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(freq, now + idx * 0.09);
-            gain.gain.setValueAtTime(0.25, now + idx * 0.09);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.7);
+            osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+            gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.5);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
-            osc.start(now + idx * 0.09);
-            osc.stop(now + idx * 0.09 + 0.7);
+            osc.start(now + idx * 0.08);
+            osc.stop(now + idx * 0.08 + 0.5);
           });
         } catch (e) {}
       }
@@ -409,6 +377,7 @@
 
     const sound = new SoundEngine();
 
+    /* Confetti Particle System */
     const canvas = document.getElementById('confettiCanvas');
     const ctx = canvas.getContext('2d');
     let confettiParticles = [];
@@ -425,8 +394,8 @@
       constructor() {
         this.x = Math.random() * canvas.width;
         this.y = -10;
-        this.size = Math.random() * 8 + 4;
-        this.speedY = Math.random() * 4 + 2;
+        this.size = Math.random() * 6 + 3;
+        this.speedY = Math.random() * 3 + 2;
         this.speedX = (Math.random() - 0.5) * 3;
         this.color = ['#EF4444', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'][Math.floor(Math.random() * 6)];
         this.rotation = Math.random() * 360;
@@ -448,7 +417,7 @@
     }
 
     function triggerConfetti() {
-      confettiParticles = Array.from({ length: 90 }, () => new Particle());
+      confettiParticles = Array.from({ length: 65 }, () => new Particle());
       if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId);
       
       let frames = 0;
@@ -460,7 +429,7 @@
           if (p.y > canvas.height) confettiParticles[index] = new Particle();
         });
         frames++;
-        if (frames < 220) {
+        if (frames < 180) {
           confettiAnimationId = requestAnimationFrame(animate);
         } else {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -468,6 +437,15 @@
       }
       animate();
     }
+
+    const PLAYER_THEMES = [
+      { id: 1, name: 'P1', fullName: 'Player 1', bg: 'bg-rose-500', border: 'border-rose-500', text: 'text-rose-400', lightBg: 'bg-rose-500/15', ring: 'ring-rose-500' },
+      { id: 2, name: 'P2', fullName: 'Player 2', bg: 'bg-blue-500', border: 'border-blue-500', text: 'text-blue-400', lightBg: 'bg-blue-500/15', ring: 'ring-blue-500' },
+      { id: 3, name: 'P3', fullName: 'Player 3', bg: 'bg-emerald-500', border: 'border-emerald-500', text: 'text-emerald-400', lightBg: 'bg-emerald-500/15', ring: 'ring-emerald-500' },
+      { id: 4, name: 'P4', fullName: 'Player 4', bg: 'bg-amber-500', border: 'border-amber-500', text: 'text-amber-400', lightBg: 'bg-amber-500/15', ring: 'ring-amber-500' },
+      { id: 5, name: 'P5', fullName: 'Player 5', bg: 'bg-purple-500', border: 'border-purple-500', text: 'text-purple-400', lightBg: 'bg-purple-500/15', ring: 'ring-purple-500' },
+      { id: 6, name: 'P6', fullName: 'Player 6', bg: 'bg-cyan-500', border: 'border-cyan-500', text: 'text-cyan-400', lightBg: 'bg-cyan-500/15', ring: 'ring-cyan-500' }
+    ];
 
     let selectedPlayerCount = 4;
     let selectedGridSize = 100;
@@ -479,7 +457,7 @@
     let revealedCount = 0;
     let gameActive = false;
 
-    // DOM Elements
+    // DOM References
     const setupScreen = document.getElementById('setupScreen');
     const gameScreen = document.getElementById('gameScreen');
     const playerCountSelector = document.getElementById('playerCountSelector');
@@ -501,6 +479,7 @@
     const totalTilesCountEl = document.getElementById('totalTilesCount');
     const thumbsFoundCountEl = document.getElementById('thumbsFoundCount');
     const thumbsTargetCountEl = document.getElementById('thumbsTargetCount');
+    const statusMessage = document.getElementById('statusMessage');
     
     const soundToggleBtn = document.getElementById('soundToggleBtn');
     const soundIcon = document.getElementById('soundIcon');
@@ -523,12 +502,12 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.dataset.count = num;
-        btn.className = `py-3 sm:py-3.5 rounded-2xl font-black text-lg sm:text-xl border-2 transition cursor-pointer flex flex-col items-center justify-center ${
+        btn.className = `py-2 rounded-xl font-bold text-sm border transition cursor-pointer flex flex-col items-center justify-center ${
           num === selectedPlayerCount
-            ? 'border-amber-400 bg-amber-400/10 text-amber-300 shadow-lg shadow-amber-400/10'
+            ? 'border-amber-400 bg-amber-400/10 text-amber-300 shadow-sm'
             : 'border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 text-slate-300'
         }`;
-        btn.innerHTML = `<span>${num}</span><span class="text-[10px] uppercase tracking-tighter font-semibold opacity-75">P</span>`;
+        btn.innerHTML = `<span class="text-base font-black">${num}</span><span class="text-[9px] uppercase opacity-75 font-semibold">P</span>`;
         
         btn.addEventListener('click', () => {
           selectedPlayerCount = num;
@@ -542,26 +521,21 @@
     function updatePlayerSelectionUI() {
       playerCountLabel.textContent = `${selectedPlayerCount} Players`;
       
-      // Highlight active button
       Array.from(playerCountSelector.children).forEach(btn => {
         const count = parseInt(btn.dataset.count, 10);
         if (count === selectedPlayerCount) {
-          btn.className = 'py-3 sm:py-3.5 rounded-2xl font-black text-lg sm:text-xl border-2 border-amber-400 bg-amber-400/10 text-amber-300 shadow-lg shadow-amber-400/10 transition cursor-pointer flex flex-col items-center justify-center';
+          btn.className = 'py-2 rounded-xl font-bold text-sm border-2 border-amber-400 bg-amber-400/10 text-amber-300 shadow-sm transition cursor-pointer flex flex-col items-center justify-center';
         } else {
-          btn.className = 'py-3 sm:py-3.5 rounded-2xl font-black text-lg sm:text-xl border-2 border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 text-slate-300 transition cursor-pointer flex flex-col items-center justify-center';
+          btn.className = 'py-2 rounded-xl font-bold text-sm border border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 text-slate-300 transition cursor-pointer flex flex-col items-center justify-center';
         }
       });
 
-      // Update color preview badges
       playerColorPreview.innerHTML = '';
       for (let i = 0; i < selectedPlayerCount; i++) {
         const theme = PLAYER_THEMES[i];
         const badge = document.createElement('div');
-        badge.className = `flex items-center gap-1.5 px-3 py-1 rounded-full border border-slate-700/60 text-xs font-semibold ${theme.lightBg} text-white`;
-        badge.innerHTML = `
-          <span class="w-2.5 h-2.5 rounded-full ${theme.bg}"></span>
-          <span>P${i + 1}</span>
-        `;
+        badge.className = `flex items-center gap-1 px-2 py-0.5 rounded-md border border-slate-800 text-[10px] font-bold ${theme.lightBg} text-white`;
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${theme.bg}"></span><span>${theme.name}</span>`;
         playerColorPreview.appendChild(badge);
       }
     }
@@ -569,13 +543,13 @@
     gridBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         gridBtns.forEach(b => {
-          b.classList.remove('active', 'border-amber-400', 'bg-amber-400/10', 'shadow-lg', 'shadow-amber-400/10');
-          b.classList.add('border-slate-800', 'bg-slate-950/60');
+          b.classList.remove('active', 'border-2', 'border-amber-400', 'bg-amber-400/10', 'shadow-md', 'shadow-amber-400/10');
+          b.classList.add('border', 'border-slate-800', 'bg-slate-950/60');
           const t = b.querySelector('span:first-child');
           if (t) t.classList.remove('text-amber-300');
         });
-        btn.classList.add('active', 'border-amber-400', 'bg-amber-400/10', 'shadow-lg', 'shadow-amber-400/10');
-        btn.classList.remove('border-slate-800', 'bg-slate-950/60');
+        btn.classList.add('active', 'border-2', 'border-amber-400', 'bg-amber-400/10', 'shadow-md', 'shadow-amber-400/10');
+        btn.classList.remove('border', 'border-slate-800', 'bg-slate-950/60');
         const mainText = btn.querySelector('span:first-child');
         if (mainText) mainText.classList.add('text-amber-300');
 
@@ -585,23 +559,24 @@
       });
     });
 
+    startGameBtn.addEventListener('click', () => {
+      sound.init();
+      startGame();
+    });
+
     function initializePlayers() {
       players = [];
       for (let i = 0; i < selectedPlayerCount; i++) {
         players.push({
           id: i + 1,
-          name: `Player ${i + 1}`,
+          name: PLAYER_THEMES[i].fullName,
+          shortName: PLAYER_THEMES[i].name,
           score: 0,
           theme: PLAYER_THEMES[i]
         });
       }
       currentTurnIndex = 0;
     }
-
-    startGameBtn.addEventListener('click', () => {
-      sound.init();
-      startGame();
-    });
 
     function startGame() {
       initializePlayers();
@@ -610,7 +585,7 @@
       revealedCount = 0;
       gameActive = true;
 
-      // Create tiles array: 10% thumbs up, 90% misses
+      // Exactly 10% thumbs up
       const thumbsCount = thumbsTarget;
       const missCount = selectedGridSize - thumbsCount;
       boardData = [];
@@ -618,56 +593,81 @@
       for (let i = 0; i < thumbsCount; i++) boardData.push({ isThumb: true, revealed: false });
       for (let i = 0; i < missCount; i++) boardData.push({ isThumb: false, revealed: false });
 
-      // Shuffle using Fisher-Yates
+      // Fisher-Yates shuffle
       for (let i = boardData.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [boardData[i], boardData[j]] = [boardData[j], boardData[i]];
       }
 
-      // UI updates
       setupScreen.classList.add('hidden');
       gameScreen.classList.remove('hidden');
       gameOverModal.classList.add('hidden');
 
       gridBadge.textContent = `${selectedGridSize} Tiles`;
+      remainingBadge.textContent = `${thumbsTarget} Left`;
       totalTilesCountEl.textContent = selectedGridSize;
       thumbsTargetCountEl.textContent = thumbsTarget;
       thumbsFoundCountEl.textContent = '0';
       revealedCountEl.textContent = '0';
+      statusMessage.textContent = `${players[0].name}'s turn. Tap a tile!`;
 
       renderBoard();
       updateScoreboardUI();
       updateTurnBanner();
     }
 
+    /* Compute strictly fitting row & column counts based on viewport aspect */
+    function getOptimalGridDimensions(totalTiles) {
+      const isLandscape = window.innerWidth >= window.innerHeight;
+      
+      if (totalTiles === 50) {
+        return isLandscape ? { cols: 10, rows: 5 } : { cols: 5, rows: 10 };
+      }
+      if (totalTiles === 100) {
+        return { cols: 10, rows: 10 };
+      }
+      if (totalTiles === 200) {
+        return isLandscape ? { cols: 20, rows: 10 } : { cols: 10, rows: 20 };
+      }
+      return { cols: 10, rows: Math.ceil(totalTiles / 10) };
+    }
+
     function renderBoard() {
       boardGrid.innerHTML = '';
+      const { cols, rows } = getOptimalGridDimensions(selectedGridSize);
 
-      // Grid columns responsiveness
-      let colsClass = 'grid-cols-5 sm:grid-cols-10';
-      if (selectedGridSize === 50) {
-        colsClass = 'grid-cols-5 sm:grid-cols-10 max-w-xl';
-      } else if (selectedGridSize === 100) {
-        colsClass = 'grid-cols-5 sm:grid-cols-10 max-w-2xl';
+      // Adaptive gap based on density to avoid any overflow
+      const gapClass = selectedGridSize === 200 ? 'gap-0.5 sm:gap-1' : 'gap-1 sm:gap-1.5';
+      boardGrid.className = `w-full h-full max-w-full max-h-full grid ${gapClass} p-0.5 justify-center items-center`;
+      
+      boardGrid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+      boardGrid.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
+
+      // Font size responsive to total count
+      let fontSizeClass = 'text-xs font-bold';
+      let iconSizeClass = 'text-base sm:text-xl';
+      if (selectedGridSize === 100) {
+        fontSizeClass = 'text-[10px] sm:text-xs font-bold';
+        iconSizeClass = 'text-sm sm:text-lg';
       } else if (selectedGridSize === 200) {
-        colsClass = 'grid-cols-8 sm:grid-cols-10 md:grid-cols-12 max-w-4xl';
+        fontSizeClass = 'text-[8px] sm:text-[10px] font-semibold';
+        iconSizeClass = 'text-xs sm:text-base';
       }
-      boardGrid.className = `w-full grid ${colsClass} gap-1.5 sm:gap-2 justify-center max-h-[62vh] overflow-y-auto no-scrollbar p-1`;
 
       boardData.forEach((tile, index) => {
         const scene = document.createElement('div');
-        scene.className = 'card-scene h-11 sm:h-14';
+        scene.className = 'card-scene';
         scene.dataset.index = index;
 
         scene.innerHTML = `
           <div class="card-flip">
-            <!-- Front (Unrevealed) -->
-            <div class="card-face bg-slate-800 border-2 border-slate-700/80 hover:border-amber-400/50 shadow-md text-xs font-bold text-slate-400 transition hover:scale-[1.03]">
+            <!-- Front Face -->
+            <div class="card-face bg-slate-900 border border-slate-700/70 hover:border-amber-400/60 shadow-sm ${fontSizeClass} text-slate-400">
               ${index + 1}
             </div>
-            <!-- Back (Revealed) -->
-            <div class="card-face card-back ${tile.isThumb ? 'bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 font-black shadow-lg shadow-amber-500/30' : 'bg-slate-950 border border-slate-800/80 text-slate-600 font-bold'}">
-              <span class="text-lg sm:text-2xl">${tile.isThumb ? '👍' : '•'}</span>
+            <!-- Back Face (Revealed) -->
+            <div class="card-face card-back ${tile.isThumb ? 'bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 font-black shadow-md shadow-amber-400/25' : 'bg-slate-950 border border-slate-800/80 text-slate-600 font-bold'}">
+              <span class="${iconSizeClass}">${tile.isThumb ? '👍' : '•'}</span>
             </div>
           </div>
         `;
@@ -676,6 +676,15 @@
         boardGrid.appendChild(scene);
       });
     }
+
+    // Auto recalculate grid on resize/rotate without breaking state
+    window.addEventListener('resize', () => {
+      if (gameActive && boardData.length > 0) {
+        const { cols, rows } = getOptimalGridDimensions(selectedGridSize);
+        boardGrid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+        boardGrid.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
+      }
+    });
 
     function handleTileClick(index, element) {
       if (!gameActive || boardData[index].revealed) return;
@@ -698,44 +707,36 @@
         sound.thumbsUp();
         triggerScorePop(element, currentPlayer);
 
-        // Turn bonus notification
-        turnStatusText.textContent = `${currentPlayer.name} found 👍! Bonus Turn!`;
-        turnStatusText.className = "text-xs font-extrabold text-amber-300 bg-amber-500/30 px-3 py-1.5 rounded-full inline-block border border-amber-400/40 animate-pulse";
+        statusMessage.innerHTML = `<span class="${currentPlayer.theme.text} font-bold">${currentPlayer.name} found 👍!</span> Bonus turn!`;
       } else {
         sound.thumbsDown();
-        turnStatusText.textContent = "Miss! Passing turn...";
-        turnStatusText.className = "text-xs font-bold text-slate-400 bg-slate-800 px-3 py-1.5 rounded-full inline-block";
-
-        // Pass turn to next player
+        const prevPlayer = currentPlayer;
         currentTurnIndex = (currentTurnIndex + 1) % players.length;
+        statusMessage.textContent = `Miss! ${players[currentTurnIndex].name}'s turn now.`;
       }
 
       updateScoreboardUI();
-      
-      setTimeout(() => {
-        if (gameActive) updateTurnBanner();
-      }, 400);
-
+      updateTurnBanner();
       checkGameOver();
     }
 
     function triggerScorePop(targetElement, player) {
       const rect = targetElement.getBoundingClientRect();
       const pop = document.createElement('div');
-      pop.className = `fixed z-50 pointer-events-none font-black text-xl sm:text-2xl animate-pop-score ${player.theme.text}`;
-      pop.style.left = `${rect.left + rect.width / 2 - 12}px`;
-      pop.style.top = `${rect.top}px`;
+      pop.className = `fixed z-50 pointer-events-none font-black text-sm sm:text-base animate-pop-score ${player.theme.text}`;
+      pop.style.left = `${Math.max(10, rect.left + rect.width / 2 - 16)}px`;
+      pop.style.top = `${Math.max(10, rect.top)}px`;
       pop.textContent = '+1 👍';
       document.body.appendChild(pop);
 
-      setTimeout(() => pop.remove(), 850);
+      setTimeout(() => pop.remove(), 800);
     }
 
     function updateTurnBanner() {
       const p = players[currentTurnIndex];
-      activeTurnBanner.className = `mt-3 p-3 rounded-2xl transition-all duration-300 flex items-center justify-between shadow-lg ${p.theme.lightBg} border ${p.theme.border}`;
+      activeTurnBanner.className = `flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all duration-200 ${p.theme.lightBg} ${p.theme.border}`;
       
-      turnAvatar.className = `w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-md ${p.theme.bg}`;
+      turnAvatar.className = `w-5 h-5 rounded-full flex items-center justify-center text-white font-black text-[10px] ${p.theme.bg}`;
       turnAvatar.textContent = p.id;
       
       turnPlayerName.textContent = p.name;
@@ -746,19 +747,19 @@
       players.forEach((p, idx) => {
         const isCurrent = idx === currentTurnIndex;
         const card = document.createElement('div');
-        card.className = `flex items-center gap-2.5 px-3.5 py-2 rounded-2xl border transition-all ${
+        card.className = `flex items-center gap-1.5 px-2.5 py-1 rounded-xl border transition-all ${
           isCurrent 
-            ? `${p.theme.lightBg} ${p.theme.border} ring-2 ${p.theme.ring} scale-105 shadow-md` 
-            : 'bg-slate-900/80 border-slate-800 opacity-70'
+            ? `${p.theme.lightBg} ${p.theme.border} ring-2 ${p.theme.ring} shadow-sm` 
+            : 'bg-slate-900/90 border-slate-800 opacity-60'
         }`;
 
         card.innerHTML = `
-          <div class="w-7 h-7 rounded-lg ${p.theme.bg} text-white font-bold flex items-center justify-center text-xs">
+          <div class="w-5 h-5 rounded-md ${p.theme.bg} text-white font-bold flex items-center justify-center text-[10px]">
             ${p.id}
           </div>
-          <div>
-            <div class="text-[10px] uppercase font-bold text-slate-400 leading-none">${p.name}</div>
-            <div class="text-sm font-black text-white leading-tight">${p.score} <span class="text-[10px] text-amber-400 font-normal">pts</span></div>
+          <div class="flex items-baseline gap-1">
+            <span class="text-[10px] font-bold text-slate-300 leading-none">${p.shortName}</span>
+            <span class="text-xs font-black text-white leading-none">${p.score}<span class="text-[9px] text-amber-400 font-normal">👍</span></span>
           </div>
         `;
         playersScoreContainer.appendChild(card);
@@ -767,9 +768,9 @@
 
     function checkGameOver() {
       if (thumbsFound >= thumbsTarget) {
-        endGame('All 10% Thumbs Up found!');
+        endGame('All 10% Thumbs Up have been found!');
       } else if (revealedCount >= selectedGridSize) {
-        endGame('All tiles revealed!');
+        endGame('All tiles on the board are revealed!');
       }
     }
 
@@ -780,38 +781,36 @@
 
       gameOverReason.textContent = reasonText;
 
-      // Sort leaderboard
       const sorted = [...players].sort((a, b) => b.score - a.score);
       const topScore = sorted[0].score;
       const winners = sorted.filter(p => p.score === topScore);
 
       if (winners.length === 1) {
         winnerText.textContent = `${winners[0].name} Wins! (${winners[0].score} 👍)`;
-        winnerBanner.className = `p-3.5 rounded-2xl ${winners[0].theme.lightBg} border ${winners[0].theme.border} mb-4`;
+        winnerBanner.className = `py-2 px-3 rounded-xl ${winners[0].theme.lightBg} border ${winners[0].theme.border} mb-3`;
       } else {
-        winnerText.textContent = `Tie! ${winners.map(w => w.name).join(' & ')} (${topScore} 👍)`;
-        winnerBanner.className = 'p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 mb-4';
+        winnerText.textContent = `Tie! ${winners.map(w => w.shortName).join(' & ')} (${topScore} 👍)`;
+        winnerBanner.className = 'py-2 px-3 rounded-xl bg-amber-500/10 border border-amber-500/30 mb-3';
       }
 
-      // Leaderboard markup
       finalLeaderboard.innerHTML = '';
       sorted.forEach((p, rank) => {
         const item = document.createElement('div');
-        item.className = `flex items-center justify-between p-2.5 rounded-xl ${p.theme.lightBg} border border-slate-800 text-xs font-semibold`;
+        item.className = `flex items-center justify-between px-2.5 py-1.5 rounded-lg ${p.theme.lightBg} border border-slate-800 text-xs`;
         item.innerHTML = `
-          <div class="flex items-center gap-2">
-            <span class="w-5 text-center font-bold text-slate-400">#${rank + 1}</span>
-            <span class="w-3 h-3 rounded-full ${p.theme.bg}"></span>
+          <div class="flex items-center gap-1.5">
+            <span class="w-4 text-center font-bold text-slate-400">#${rank + 1}</span>
+            <span class="w-2.5 h-2.5 rounded-full ${p.theme.bg}"></span>
             <span class="text-white font-bold">${p.name}</span>
           </div>
-          <div class="text-amber-300 font-extrabold text-sm">${p.score} 👍</div>
+          <div class="text-amber-300 font-extrabold text-xs">${p.score} 👍</div>
         `;
         finalLeaderboard.appendChild(item);
       });
 
       setTimeout(() => {
         gameOverModal.classList.remove('hidden');
-      }, 600);
+      }, 500);
     }
 
     rematchBtn.addEventListener('click', () => {
@@ -825,14 +824,12 @@
       setupScreen.classList.remove('hidden');
     });
 
-    // Sound Toggle
     soundToggleBtn.addEventListener('click', () => {
       sound.enabled = !sound.enabled;
       soundIcon.textContent = sound.enabled ? '🔊' : '🔇';
-      soundToggleBtn.classList.toggle('opacity-50', !sound.enabled);
+      soundToggleBtn.classList.toggle('opacity-40', !sound.enabled);
     });
 
-    // Custom Quit Confirmation Modal
     quitGameBtn.addEventListener('click', () => {
       quitModal.classList.remove('hidden');
     });
@@ -848,6 +845,7 @@
       gameActive = false;
     });
 
+    // Initialize default UI state
     initPlayerSelection();
 
   </script>
