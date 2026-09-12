@@ -1,17 +1,21 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full overflow-hidden">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Thumbs Up! - Multiplayer Party Game</title>
-  
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Outfit:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
 
   <script>
     tailwind.config = {
@@ -38,7 +42,8 @@
 
   <style>
     /* Full viewport height lock across mobile browsers */
-    html, body {
+    html,
+    body {
       height: 100%;
       height: 100dvh;
       width: 100%;
@@ -57,7 +62,7 @@
       height: 100%;
       position: relative;
     }
-    
+
     .card-flip {
       position: absolute;
       inset: 0;
@@ -91,6 +96,7 @@
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
+
     .no-scrollbar {
       -ms-overflow-style: none;
       scrollbar-width: none;
@@ -103,7 +109,8 @@
   </style>
 </head>
 
-<body class="bg-slate-950 text-slate-100 font-sans flex flex-col h-full h-[100dvh] w-full overflow-hidden selection:bg-amber-400 selection:text-slate-950">
+<body
+  class="bg-slate-950 text-slate-100 font-sans flex flex-col h-full h-[100dvh] w-full overflow-hidden selection:bg-amber-400 selection:text-slate-950">
 
   <!-- Confetti Canvas -->
   <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
@@ -118,14 +125,17 @@
   <!-- ========================================================= -->
   <!-- SCREEN 1: COMPACT SETUP SCREEN (Fits 100% in One Page) -->
   <!-- ========================================================= -->
-  <main id="setupScreen" class="h-full w-full max-w-md mx-auto px-4 py-3 flex flex-col justify-between items-center text-center">
-    
+  <main id="setupScreen"
+    class="h-full w-full max-w-md mx-auto px-4 py-3 flex flex-col justify-between items-center text-center">
+
     <!-- Top Hero Section -->
     <header class="pt-1 sm:pt-2">
-      <div class="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 shadow-lg shadow-amber-500/20 mb-2 text-2xl sm:text-3xl">
+      <div
+        class="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 shadow-lg shadow-amber-500/20 mb-2 text-2xl sm:text-3xl">
         👍
       </div>
-      <h1 class="text-3xl sm:text-4xl font-extrabold font-brand tracking-tight bg-gradient-to-r from-amber-300 via-yellow-200 to-emerald-400 bg-clip-text text-transparent leading-none">
+      <h1
+        class="text-3xl sm:text-4xl font-extrabold font-brand tracking-tight bg-gradient-to-r from-amber-300 via-yellow-200 to-emerald-400 bg-clip-text text-transparent leading-none">
         Thumbs Up!
       </h1>
       <p class="text-slate-400 text-xs sm:text-sm mt-1">
@@ -134,11 +144,13 @@
     </header>
 
     <!-- Options Box -->
-    <section class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-3 sm:p-4 backdrop-blur-md shadow-xl flex flex-col gap-3 my-auto">
-      
+    <section
+      class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-3 sm:p-4 backdrop-blur-md shadow-xl flex flex-col gap-3 my-auto">
+
       <!-- 1. Player Count Selection -->
       <div>
-        <div class="flex items-center justify-between text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+        <div
+          class="flex items-center justify-between text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
           <span>Players</span>
           <span id="playerCountLabel" class="text-amber-400 font-bold">4 Players</span>
         </div>
@@ -148,26 +160,31 @@
       </div>
 
       <!-- Player Color Preview Badges -->
-      <div id="playerColorPreview" class="flex flex-wrap gap-1.5 justify-center py-1.5 px-2 bg-slate-950/70 rounded-xl border border-slate-800/80">
+      <div id="playerColorPreview"
+        class="flex flex-wrap gap-1.5 justify-center py-1.5 px-2 bg-slate-950/70 rounded-xl border border-slate-800/80">
         <!-- Rendered by JS -->
       </div>
 
       <!-- 2. Grid Size Selection -->
       <div>
-        <div class="flex items-center justify-between text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+        <div
+          class="flex items-center justify-between text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
           <span>Total Tiles</span>
           <span id="thumbsTargetLabel" class="text-emerald-400 font-medium">10 Thumbs Up hidden</span>
         </div>
         <div class="grid grid-cols-3 gap-2">
-          <button type="button" data-grid="50" class="grid-btn py-2 px-1 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 transition cursor-pointer flex flex-col items-center">
+          <button type="button" data-grid="50"
+            class="grid-btn py-2 px-1 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 transition cursor-pointer flex flex-col items-center">
             <span class="text-lg font-black text-white leading-tight">50</span>
             <span class="text-[10px] text-slate-400">5 Thumbs (10%)</span>
           </button>
-          <button type="button" data-grid="100" class="grid-btn active py-2 px-1 rounded-xl border-2 border-amber-400 bg-amber-400/10 transition cursor-pointer flex flex-col items-center shadow-md shadow-amber-400/10">
+          <button type="button" data-grid="100"
+            class="grid-btn active py-2 px-1 rounded-xl border-2 border-amber-400 bg-amber-400/10 transition cursor-pointer flex flex-col items-center shadow-md shadow-amber-400/10">
             <span class="text-lg font-black text-amber-300 leading-tight">100</span>
             <span class="text-[10px] text-amber-200/80">10 Thumbs (10%)</span>
           </button>
-          <button type="button" data-grid="200" class="grid-btn py-2 px-1 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 transition cursor-pointer flex flex-col items-center">
+          <button type="button" data-grid="200"
+            class="grid-btn py-2 px-1 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 transition cursor-pointer flex flex-col items-center">
             <span class="text-lg font-black text-white leading-tight">200</span>
             <span class="text-[10px] text-slate-400">20 Thumbs (10%)</span>
           </button>
@@ -175,18 +192,23 @@
       </div>
 
       <!-- Compact Rules Hint -->
-      <div class="bg-slate-800/40 rounded-xl p-2 text-[11px] text-slate-400 flex items-center gap-2 border border-slate-800 leading-tight text-left">
+      <div
+        class="bg-slate-800/40 rounded-xl p-2 text-[11px] text-slate-400 flex items-center gap-2 border border-slate-800 leading-tight text-left">
         <span class="text-base leading-none">💡</span>
-        <span>Tap any tile! 👍 gives <strong>+1 Point</strong> and an <strong>extra turn</strong>. Misses pass the turn!</span>
+        <span>Tap any tile! 👍 gives <strong>+1 Point</strong> and an <strong>extra turn</strong>. Misses pass the
+          turn!</span>
       </div>
 
     </section>
 
     <!-- Start Button -->
     <footer class="w-full pb-1 sm:pb-2">
-      <button id="startGameBtn" type="button" class="w-full py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:brightness-110 active:scale-[0.99] text-slate-950 font-extrabold text-lg shadow-lg shadow-amber-500/20 transition cursor-pointer flex items-center justify-center gap-2">
+      <button id="startGameBtn" type="button"
+        class="w-full py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:brightness-110 active:scale-[0.99] text-slate-950 font-extrabold text-lg shadow-lg shadow-amber-500/20 transition cursor-pointer flex items-center justify-center gap-2">
         <span>Start Game</span>
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
       </button>
     </footer>
 
@@ -195,14 +217,18 @@
   <!-- ========================================================= -->
   <!-- SCREEN 2: GAMEPLAY SCREEN (Strict Zero-Scroll Layout) -->
   <!-- ========================================================= -->
-  <section id="gameScreen" class="h-full h-[100dvh] w-full max-w-5xl mx-auto px-2 py-1.5 sm:px-3 sm:py-2 flex flex-col justify-between hidden">
-    
+  <section id="gameScreen"
+    class="h-full h-[100dvh] w-full max-w-5xl mx-auto px-2 py-1.5 sm:px-3 sm:py-2 flex flex-col justify-between hidden">
+
     <!-- Unified Top Control Header -->
-    <header class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2 backdrop-blur-md shadow-md shrink-0 flex items-center justify-between gap-2">
-      
+    <header
+      class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2 backdrop-blur-md shadow-md shrink-0 flex items-center justify-between gap-2">
+
       <!-- Brand & Stats -->
       <div class="flex items-center gap-2">
-        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-400 text-slate-950 flex items-center justify-center text-sm sm:text-base font-bold shrink-0">👍</div>
+        <div
+          class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-400 text-slate-950 flex items-center justify-center text-sm sm:text-base font-bold shrink-0">
+          👍</div>
         <div class="flex flex-col">
           <span class="font-brand font-bold text-xs sm:text-sm text-white leading-tight">Thumbs Up</span>
           <div class="text-[10px] sm:text-xs text-slate-400 flex items-center gap-1 leading-none">
@@ -214,18 +240,23 @@
       </div>
 
       <!-- Dynamic Active Turn Pill -->
-      <div id="activeTurnBanner" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all duration-200">
-        <div id="turnAvatar" class="w-5 h-5 rounded-full flex items-center justify-center text-white font-extrabold text-[10px]">1</div>
+      <div id="activeTurnBanner"
+        class="flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all duration-200">
+        <div id="turnAvatar"
+          class="w-5 h-5 rounded-full flex items-center justify-center text-white font-extrabold text-[10px]">1</div>
         <span id="turnPlayerName" class="font-bold text-xs text-white">Player 1</span>
         <span id="turnStatusText" class="text-[10px] font-semibold text-slate-300 hidden sm:inline">• Your turn</span>
       </div>
 
       <!-- Action Buttons -->
       <div class="flex items-center gap-1.5">
-        <button id="soundToggleBtn" type="button" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center text-xs sm:text-sm transition cursor-pointer" title="Toggle Sound">
+        <button id="soundToggleBtn" type="button"
+          class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center text-xs sm:text-sm transition cursor-pointer"
+          title="Toggle Sound">
           <span id="soundIcon">🔊</span>
         </button>
-        <button id="quitGameBtn" type="button" class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 text-xs font-bold border border-rose-500/30 transition cursor-pointer">
+        <button id="quitGameBtn" type="button"
+          class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 text-xs font-bold border border-rose-500/30 transition cursor-pointer">
           Quit
         </button>
       </div>
@@ -247,30 +278,39 @@
     </main>
 
     <!-- Bottom Micro-Status Bar -->
-    <footer class="w-full shrink-0 bg-slate-900/70 border border-slate-800/80 rounded-xl px-2.5 py-1 text-[10px] sm:text-xs text-slate-400 flex items-center justify-between">
-      <div>Revealed: <span id="revealedCount" class="text-white font-bold">0</span> / <span id="totalTilesCount" class="text-white font-bold">100</span></div>
+    <footer
+      class="w-full shrink-0 bg-slate-900/70 border border-slate-800/80 rounded-xl px-2.5 py-1 text-[10px] sm:text-xs text-slate-400 flex items-center justify-between">
+      <div>Revealed: <span id="revealedCount" class="text-white font-bold">0</span> / <span id="totalTilesCount"
+          class="text-white font-bold">100</span></div>
       <div id="statusMessage" class="text-slate-300 truncate px-2 font-medium">Tap any tile to begin!</div>
-      <div>👍 Found: <span id="thumbsFoundCount" class="text-amber-400 font-bold">0</span> / <span id="thumbsTargetCount" class="text-amber-400 font-bold">10</span></div>
+      <div>👍 Found: <span id="thumbsFoundCount" class="text-amber-400 font-bold">0</span> / <span
+          id="thumbsTargetCount" class="text-amber-400 font-bold">10</span></div>
     </footer>
 
   </section>
 
   <!-- Quit Confirmation Modal -->
-  <div id="quitModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+  <div id="quitModal"
+    class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-slate-700 w-full max-w-xs rounded-2xl p-5 text-center shadow-2xl">
       <h4 class="text-base font-bold text-white mb-1.5">Quit Match?</h4>
       <p class="text-slate-400 text-xs mb-4">Current progress will be reset.</p>
       <div class="grid grid-cols-2 gap-2">
-        <button id="cancelQuitBtn" class="py-2 px-3 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700">Cancel</button>
-        <button id="confirmQuitBtn" class="py-2 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold">Quit</button>
+        <button id="cancelQuitBtn"
+          class="py-2 px-3 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700">Cancel</button>
+        <button id="confirmQuitBtn"
+          class="py-2 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold">Quit</button>
       </div>
     </div>
   </div>
 
   <!-- Game Over & Leaderboard Modal -->
-  <div id="gameOverModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 hidden">
-    <div class="bg-slate-900 border border-slate-700 w-full max-w-xs sm:max-w-sm rounded-2xl p-4 sm:p-6 text-center shadow-2xl relative">
-      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-yellow-400 to-amber-200 text-slate-950 flex items-center justify-center text-2xl mx-auto mb-2 shadow-lg shadow-amber-400/20">
+  <div id="gameOverModal"
+    class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 hidden">
+    <div
+      class="bg-slate-900 border border-slate-700 w-full max-w-xs sm:max-w-sm rounded-2xl p-4 sm:p-6 text-center shadow-2xl relative">
+      <div
+        class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-yellow-400 to-amber-200 text-slate-950 flex items-center justify-center text-2xl mx-auto mb-2 shadow-lg shadow-amber-400/20">
         🏆
       </div>
       <h3 class="text-xl sm:text-2xl font-extrabold font-brand text-white mb-0.5">Game Over!</h3>
@@ -289,10 +329,12 @@
 
       <!-- Action Buttons -->
       <div class="grid grid-cols-2 gap-2">
-        <button id="rematchBtn" type="button" class="py-2.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs transition shadow-md shadow-amber-400/20 cursor-pointer">
+        <button id="rematchBtn" type="button"
+          class="py-2.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs transition shadow-md shadow-amber-400/20 cursor-pointer">
           🔄 Play Again
         </button>
-        <button id="menuBtn" type="button" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition border border-slate-700 cursor-pointer">
+        <button id="menuBtn" type="button"
+          class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition border border-slate-700 cursor-pointer">
           ⚙️ New Setup
         </button>
       </div>
@@ -333,7 +375,7 @@
             osc.start(now + i * 0.05);
             osc.stop(now + i * 0.05 + 0.25);
           });
-        } catch (e) {}
+        } catch (e) { }
       }
       thumbsDown() {
         if (!this.enabled) return;
@@ -351,7 +393,7 @@
           gain.connect(this.ctx.destination);
           osc.start(now);
           osc.stop(now + 0.18);
-        } catch (e) {}
+        } catch (e) { }
       }
       winFanfare() {
         if (!this.enabled) return;
@@ -371,7 +413,7 @@
             osc.start(now + idx * 0.08);
             osc.stop(now + idx * 0.08 + 0.5);
           });
-        } catch (e) {}
+        } catch (e) { }
       }
     }
 
@@ -419,7 +461,7 @@
     function triggerConfetti() {
       confettiParticles = Array.from({ length: 65 }, () => new Particle());
       if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId);
-      
+
       let frames = 0;
       function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -456,6 +498,7 @@
     let thumbsFound = 0;
     let revealedCount = 0;
     let gameActive = false;
+    let aiTurnTimeout = null;
 
     // DOM References
     const setupScreen = document.getElementById('setupScreen');
@@ -466,7 +509,7 @@
     const thumbsTargetLabel = document.getElementById('thumbsTargetLabel');
     const gridBtns = document.querySelectorAll('.grid-btn');
     const startGameBtn = document.getElementById('startGameBtn');
-    
+
     const boardGrid = document.getElementById('boardGrid');
     const gridBadge = document.getElementById('gridBadge');
     const remainingBadge = document.getElementById('remainingBadge');
@@ -480,7 +523,7 @@
     const thumbsFoundCountEl = document.getElementById('thumbsFoundCount');
     const thumbsTargetCountEl = document.getElementById('thumbsTargetCount');
     const statusMessage = document.getElementById('statusMessage');
-    
+
     const soundToggleBtn = document.getElementById('soundToggleBtn');
     const soundIcon = document.getElementById('soundIcon');
     const quitGameBtn = document.getElementById('quitGameBtn');
@@ -498,17 +541,18 @@
 
     function initPlayerSelection() {
       playerCountSelector.innerHTML = '';
-      [2, 3, 4, 5, 6].forEach(num => {
+      [1, 2, 3, 4, 5, 6].forEach(num => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.dataset.count = num;
-        btn.className = `py-2 rounded-xl font-bold text-sm border transition cursor-pointer flex flex-col items-center justify-center ${
-          num === selectedPlayerCount
-            ? 'border-amber-400 bg-amber-400/10 text-amber-300 shadow-sm'
-            : 'border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 text-slate-300'
-        }`;
-        btn.innerHTML = `<span class="text-base font-black">${num}</span><span class="text-[9px] uppercase opacity-75 font-semibold">P</span>`;
-        
+        btn.className = `py-2 rounded-xl font-bold text-sm border transition cursor-pointer flex flex-col items-center justify-center ${num === selectedPlayerCount
+          ? 'border-amber-400 bg-amber-400/10 text-amber-300 shadow-sm'
+          : 'border-slate-800 bg-slate-950/60 hover:bg-slate-800/60 text-slate-300'
+          }`;
+        btn.innerHTML = num === 1
+          ? `<span class="text-base font-black">1</span><span class="text-[9px] uppercase opacity-75 font-semibold text-center leading-none">P<br>vs AI</span>`
+          : `<span class="text-base font-black">${num}</span><span class="text-[9px] uppercase opacity-75 font-semibold">P</span>`;
+
         btn.addEventListener('click', () => {
           selectedPlayerCount = num;
           updatePlayerSelectionUI();
@@ -519,8 +563,8 @@
     }
 
     function updatePlayerSelectionUI() {
-      playerCountLabel.textContent = `${selectedPlayerCount} Players`;
-      
+      playerCountLabel.textContent = selectedPlayerCount === 1 ? '1 Player (vs AI)' : `${selectedPlayerCount} Players`;
+
       Array.from(playerCountSelector.children).forEach(btn => {
         const count = parseInt(btn.dataset.count, 10);
         if (count === selectedPlayerCount) {
@@ -531,11 +575,14 @@
       });
 
       playerColorPreview.innerHTML = '';
-      for (let i = 0; i < selectedPlayerCount; i++) {
+      const displayCount = selectedPlayerCount === 1 ? 2 : selectedPlayerCount;
+      const names = selectedPlayerCount === 1 ? ['You', 'AI'] : null;
+      for (let i = 0; i < displayCount; i++) {
         const theme = PLAYER_THEMES[i];
         const badge = document.createElement('div');
         badge.className = `flex items-center gap-1 px-2 py-0.5 rounded-md border border-slate-800 text-[10px] font-bold ${theme.lightBg} text-white`;
-        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${theme.bg}"></span><span>${theme.name}</span>`;
+        const displayName = names ? names[i] : theme.name;
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${theme.bg}"></span><span>${displayName}</span>`;
         playerColorPreview.appendChild(badge);
       }
     }
@@ -566,14 +613,24 @@
 
     function initializePlayers() {
       players = [];
-      for (let i = 0; i < selectedPlayerCount; i++) {
+      if (selectedPlayerCount === 1) {
         players.push({
-          id: i + 1,
-          name: PLAYER_THEMES[i].fullName,
-          shortName: PLAYER_THEMES[i].name,
-          score: 0,
-          theme: PLAYER_THEMES[i]
+          id: 1, name: 'You', shortName: 'You', score: 0, theme: PLAYER_THEMES[0], isAi: false
         });
+        players.push({
+          id: 2, name: 'Computer', shortName: 'AI', score: 0, theme: PLAYER_THEMES[1], isAi: true
+        });
+      } else {
+        for (let i = 0; i < selectedPlayerCount; i++) {
+          players.push({
+            id: i + 1,
+            name: PLAYER_THEMES[i].fullName,
+            shortName: PLAYER_THEMES[i].name,
+            score: 0,
+            theme: PLAYER_THEMES[i],
+            isAi: false
+          });
+        }
       }
       currentTurnIndex = 0;
     }
@@ -589,7 +646,7 @@
       const thumbsCount = thumbsTarget;
       const missCount = selectedGridSize - thumbsCount;
       boardData = [];
-      
+
       for (let i = 0; i < thumbsCount; i++) boardData.push({ isThumb: true, revealed: false });
       for (let i = 0; i < missCount; i++) boardData.push({ isThumb: false, revealed: false });
 
@@ -619,7 +676,7 @@
     /* Compute strictly fitting row & column counts based on viewport aspect */
     function getOptimalGridDimensions(totalTiles) {
       const isLandscape = window.innerWidth >= window.innerHeight;
-      
+
       if (totalTiles === 50) {
         return isLandscape ? { cols: 10, rows: 5 } : { cols: 5, rows: 10 };
       }
@@ -639,7 +696,7 @@
       // Adaptive gap based on density to avoid any overflow
       const gapClass = selectedGridSize === 200 ? 'gap-0.5 sm:gap-1' : 'gap-1 sm:gap-1.5';
       boardGrid.className = `w-full h-full max-w-full max-h-full grid ${gapClass} p-0.5 justify-center items-center`;
-      
+
       boardGrid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
       boardGrid.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
 
@@ -688,6 +745,7 @@
 
     function handleTileClick(index, element) {
       if (!gameActive || boardData[index].revealed) return;
+      if (players[currentTurnIndex].isAi) return; // Prevent human click during AI turn
 
       boardData[index].revealed = true;
       revealedCount++;
@@ -718,6 +776,68 @@
       updateScoreboardUI();
       updateTurnBanner();
       checkGameOver();
+
+      if (gameActive && players[currentTurnIndex].isAi) {
+        scheduleAITurn();
+      }
+    }
+
+    function scheduleAITurn() {
+      if (!gameActive) return;
+      clearTimeout(aiTurnTimeout);
+      aiTurnTimeout = setTimeout(() => {
+        playAITurn();
+      }, 700); // 700ms delay for natural feel
+    }
+
+    function playAITurn() {
+      if (!gameActive || !players[currentTurnIndex].isAi) return;
+
+      const unrevealedIndices = [];
+      boardData.forEach((tile, idx) => {
+        if (!tile.revealed) unrevealedIndices.push(idx);
+      });
+
+      if (unrevealedIndices.length === 0) return;
+
+      // Pick random
+      const randomIdx = unrevealedIndices[Math.floor(Math.random() * unrevealedIndices.length)];
+
+      const sceneElements = boardGrid.querySelectorAll('.card-scene');
+      const targetElement = sceneElements[randomIdx];
+
+      boardData[randomIdx].revealed = true;
+      revealedCount++;
+      revealedCountEl.textContent = revealedCount;
+
+      targetElement.classList.add('revealed');
+
+      const isThumb = boardData[randomIdx].isThumb;
+      const currentPlayer = players[currentTurnIndex];
+
+      if (isThumb) {
+        thumbsFound++;
+        currentPlayer.score++;
+        thumbsFoundCountEl.textContent = thumbsFound;
+        remainingBadge.textContent = `${thumbsTarget - thumbsFound} Left`;
+
+        sound.thumbsUp();
+        triggerScorePop(targetElement, currentPlayer);
+
+        statusMessage.innerHTML = `<span class="${currentPlayer.theme.text} font-bold">${currentPlayer.name} found 👍!</span> Bonus turn!`;
+      } else {
+        sound.thumbsDown();
+        currentTurnIndex = (currentTurnIndex + 1) % players.length;
+        statusMessage.textContent = `Miss! ${players[currentTurnIndex].name}'s turn now.`;
+      }
+
+      updateScoreboardUI();
+      updateTurnBanner();
+      checkGameOver();
+
+      if (gameActive && players[currentTurnIndex].isAi) {
+        scheduleAITurn();
+      }
     }
 
     function triggerScorePop(targetElement, player) {
@@ -735,10 +855,10 @@
     function updateTurnBanner() {
       const p = players[currentTurnIndex];
       activeTurnBanner.className = `flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all duration-200 ${p.theme.lightBg} ${p.theme.border}`;
-      
+
       turnAvatar.className = `w-5 h-5 rounded-full flex items-center justify-center text-white font-black text-[10px] ${p.theme.bg}`;
       turnAvatar.textContent = p.id;
-      
+
       turnPlayerName.textContent = p.name;
     }
 
@@ -747,11 +867,10 @@
       players.forEach((p, idx) => {
         const isCurrent = idx === currentTurnIndex;
         const card = document.createElement('div');
-        card.className = `flex items-center gap-1.5 px-2.5 py-1 rounded-xl border transition-all ${
-          isCurrent 
-            ? `${p.theme.lightBg} ${p.theme.border} ring-2 ${p.theme.ring} shadow-sm` 
-            : 'bg-slate-900/90 border-slate-800 opacity-60'
-        }`;
+        card.className = `flex items-center gap-1.5 px-2.5 py-1 rounded-xl border transition-all ${isCurrent
+          ? `${p.theme.lightBg} ${p.theme.border} ring-2 ${p.theme.ring} shadow-sm`
+          : 'bg-slate-900/90 border-slate-800 opacity-60'
+          }`;
 
         card.innerHTML = `
           <div class="w-5 h-5 rounded-md ${p.theme.bg} text-white font-bold flex items-center justify-center text-[10px]">
@@ -822,6 +941,7 @@
       gameOverModal.classList.add('hidden');
       gameScreen.classList.add('hidden');
       setupScreen.classList.remove('hidden');
+      clearTimeout(aiTurnTimeout);
     });
 
     soundToggleBtn.addEventListener('click', () => {
@@ -843,6 +963,7 @@
       gameScreen.classList.add('hidden');
       setupScreen.classList.remove('hidden');
       gameActive = false;
+      clearTimeout(aiTurnTimeout);
     });
 
     // Initialize default UI state
@@ -850,4 +971,5 @@
 
   </script>
 </body>
+
 </html>
